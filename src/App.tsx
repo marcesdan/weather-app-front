@@ -1,6 +1,6 @@
-import { Route, Routes } from "react-router-dom"
-import { RootLayout } from "./components/layouts"
-import { Forecast, Home, NotFound } from "./pages"
+import { Route, Routes } from "react-router-dom";
+import { RootLayout } from "./components/layouts";
+import { Forecast, Home, NotFound } from "./pages";
 
 export default function App() {
   return (
@@ -11,5 +11,5 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
-  )
+  );
 }

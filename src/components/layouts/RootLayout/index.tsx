@@ -1,15 +1,16 @@
-import { Outlet } from "react-router-dom"
-import styled from "styled-components"
-import { CurrentLocation, CurrentWeather } from "../../organisms"
+import { Outlet } from "react-router-dom";
+import styled from "styled-components";
+import { CurrentLocation, CurrentWeather } from "../../organisms";
 
 export default function RootLayout() {
   return (
     <RootContainer>
+      <Header />
       <CurrentLocation />
       <CurrentWeather />
       <Outlet />
     </RootContainer>
-  )
+  );
 }
 
 const RootContainer = styled.div`
@@ -18,4 +19,4 @@ const RootContainer = styled.div`
   width: 100%;
   height: 100%;
   background-color: #ffffff;
-`
+`;

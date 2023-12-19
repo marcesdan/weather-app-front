@@ -1,4 +1,4 @@
-import { OtherCities, Forecast } from "../../components/organisms"
+import { OtherCities, Forecast } from "../../components/organisms";
 
 export default function Home() {
   return (
@@ -6,5 +6,5 @@ export default function Home() {
       <Forecast />
       <OtherCities />
     </>
-  )
+  );
 }

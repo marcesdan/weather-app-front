@@ -1,3 +1,3 @@
 export default function OtherCities() {
-  return null
+  return null;
 }
