@@ -1,6 +1,6 @@
-export type GeolocationResult = { latitude: number; longitude: number } | null;
+export type GeolocationFromNavigator = { lat: number; lon: number } | null;
 
-export default async function getGeolocation(): Promise<GeolocationResult> {
+export default async function getGeolocation(): Promise<GeolocationFromNavigator> {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
       console.log("Geolocation is not supported by your browser");
@@ -9,8 +9,8 @@ export default async function getGeolocation(): Promise<GeolocationResult> {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
           });
         },
         (error) => {
@@ -18,9 +18,9 @@ export default async function getGeolocation(): Promise<GeolocationResult> {
           resolve(null);
         },
         {
-          enableHighAccuracy: true, // Timeout of 5 seconds
+          enableHighAccuracy: true,
           maximumAge: 7200000,
-        },
+        }
       );
     }
   });

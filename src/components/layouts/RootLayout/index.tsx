@@ -1,13 +1,11 @@
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
-import { CurrentLocation, CurrentWeather } from "../../organisms";
+import { Header } from "../../organisms";
 
 export default function RootLayout() {
   return (
     <RootContainer>
       <Header />
-      <CurrentLocation />
-      <CurrentWeather />
       <Outlet />
     </RootContainer>
   );
