@@ -47,6 +47,32 @@ App full client-side que permita visualizar el pronóstico climático. Los datos
 - ┃ ┃ ┗ 📜 normalizers
 - ┗ 📂utils
 
+En donde se hace uso de módulos exportadores, conocidos como "Barrels". Es decir, archivos `index` que se utilizan únicamente para exportar módulos y tipos desde su subcarpeta.
+
+Por ejemplo, en lugar de tener importaciones como estas:
+
+```typescript
+import { ComponentA } from "./components/ComponentA";
+import { ComponentB } from "./components/ComponentB";
+```
+
+Se tendría en cambio:
+
+```typescript
+import { ComponentA, ComponentB } from "@/components";
+```
+
+Sumado a los path aliases **@/\***, esto provee una mejora en la experiencia de desarrollo y en la mantenibilidad de proyectos extensos.
+
+Pueden verse estos módulos Barrels, por ejemplo en
+
+- [atoms](./src/components/atoms/index.ts)
+- [molecules](./src/components/molecules/index.ts)
+- [organisms](./src/components/organisms/index.ts)
+- [styles](./src/components/styles/index.ts)
+- [utils](./src/utils/index.ts)
+- [pages](./src/pages/index.ts)
+
 ## Estilo
 
 Dada la naturaleza de las soluciones que proponen react, redux y redux-saga (hooks, reducers, efectos secundarios, memorización, normalización, etc), hay una inclinación a la programación declarativa y funcional a lo largo de todo el proyecto.
@@ -113,11 +139,9 @@ Por ejemplo en:
 - [GeolocationFromIpApi](./src/services/ipApiService/index.ts)
 - [FetchResult](./src/utils/safeFetch/index.ts)
 
-Para así tener asistencia en editores de código / IDEs, a lo largo de toda la aplicación (incluso en store y sagas), mejorando la experiencia de desarrollo.
+Para así tener asistencia en editores de código / IDEs, a lo largo de toda la aplicación (incluso en store y sagas), mejorando la experiencia de desarrollo. Cómo así también para evitar errores.
 
-Cómo así también para evitar errores. Si bien fue costoso al comienzo, creo que fue de gran ayuda en el último tramo.
-
-Creo que sería muy dificil mantener un proyecto así, sin asistencia de tipos (ya sea con typescript, JSDoc, etc)
+Si bien fue costoso al comienzo, creo que fue de gran ayuda en el último tramo. Creo que sería muy dificil mantener un proyecto así, sin asistencia de tipos (ya sea con typescript, JSDoc, etc)
 
 ## Scripts
 
