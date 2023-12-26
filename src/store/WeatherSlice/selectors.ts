@@ -36,10 +36,6 @@ export const selectCurrentDailyWeather = createSelector(
 // El resto de las ciudades sin la ciudad actual
 export const selectOtherCitiesWeather = createSelector(
   [selectCurrentCity, selectSlice],
-  (
-    currentCity,
-    { weather: { [currentCity]: _, ...restWithoutCurrentCity } }
-  ) => {
-    return Object.values(restWithoutCurrentCity);
-  }
+  (currentCity, { weather: { [currentCity]: _, ...restWithoutCurrentCity } }) =>
+    Object.values(restWithoutCurrentCity)
 );
