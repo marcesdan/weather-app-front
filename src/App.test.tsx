@@ -29,15 +29,14 @@ describe("App", () => {
     expect(screen.getByText("Ciudades")).toBeInTheDocument();
   });
 
-  it("renders NotFound page when non-existent route is visited", () => {
+  it("renders Ciudades page when /dias route is visited", () => {
     render(
       <Provider store={store}>
-        <MemoryRouter initialEntries={["/non-existent-route"]}>
+        <MemoryRouter initialEntries={["/dias"]}>
           <App />
         </MemoryRouter>
       </Provider>
     );
-
-    expect(screen.getByText("Page Not Found")).toBeInTheDocument();
+    expect(screen.getByText("Próximos días en")).toBeInTheDocument();
   });
 });
