@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-
 export default function useHorizontalScroll() {
   const ref = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);

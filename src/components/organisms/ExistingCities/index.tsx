@@ -4,7 +4,7 @@ import { removeCity } from "@/store/WeatherSlice"; // import the removeCity acti
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { selectOtherCitiesWeather } from "@/store/WeatherSlice/selectors";
 
-export default function ExistingCitiesList() {
+export default function ExistingCities() {
   const dispatch = useAppDispatch();
   const otherCities = useAppSelector(selectOtherCitiesWeather);
   if (!otherCities?.length) return null;

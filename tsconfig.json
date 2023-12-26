@@ -23,7 +23,8 @@
       "store/*": ["./src/store/*"],
       "services/*": ["./src/services/*"],
       "utils/*": ["./src/utils/*"]
-    }
+    },
+    "types": ["jest", "node"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

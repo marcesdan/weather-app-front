@@ -18,7 +18,7 @@ export type NormalizedGeolocation = {
  * @param ipApiData
  * @param geoFromNavigator
  * @param reverseGeocodingData
- * @returns estructura normalizada
+ * @returns estructura normalizada``
  */
 export const normalizeGeolocationData = (
   ipApiData: GeolocationFromIpApi,
@@ -47,15 +47,9 @@ export const normalizeGeolocationData = (
 export const normalizeGeolocationDataFromIpaApi = (
   ipApiData: GeolocationFromIpApi
 ): NormalizedGeolocation => {
-  const { country, countryCode, regionName, timezone, city, lat, lon } =
-    ipApiData;
+  const { regionName, ...rest } = ipApiData;
   return {
-    city,
-    lat,
-    lon,
-    country,
-    countryCode,
     state: regionName,
-    timezone,
+    ...rest,
   };
 };

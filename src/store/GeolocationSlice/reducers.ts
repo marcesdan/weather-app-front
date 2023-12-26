@@ -11,7 +11,7 @@ const initialState: GeolocationState = {
   status: "idle",
 };
 
-export const GeolocationSlice = createSlice({
+export const geolocationSlice = createSlice({
   name: "geolocation",
   initialState,
   reducers: {
@@ -22,8 +22,8 @@ export const GeolocationSlice = createSlice({
   },
 });
 
-export const { setGeolocation } = GeolocationSlice.actions;
+export const { setGeolocation } = geolocationSlice.actions;
 
 export const geolocationRequest = createAction("geolocation/request");
 
-export default GeolocationSlice.reducer;
+export default geolocationSlice.reducer;

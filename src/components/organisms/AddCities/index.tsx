@@ -16,13 +16,13 @@ export type AddCityPayload = {
   city: string;
 };
 
-const PrefetchedCitiesList: React.FC = () => {
+const AddCities: React.FC = () => {
   const dispatch = useAppDispatch();
   const prefetchedCities = useAppSelector(selectPrefetchedCities);
   const prefetchedStatus = useAppSelector(selectPrefetchedStatus);
   const [cityToAdd, setCityToAdd] = useState<string>("");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSave = useCallback(
+  const debouncedSave: any = useCallback(
     debounce((nextValue) => dispatch(prefetchCityRequest(nextValue)), 1000),
     []
   );
@@ -99,4 +99,4 @@ const SelectContainer = styled.div`
   }
 `;
 
-export default PrefetchedCitiesList;
+export default AddCities;
