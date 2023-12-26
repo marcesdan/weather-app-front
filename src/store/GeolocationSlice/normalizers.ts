@@ -1,5 +1,5 @@
 import { GeolocationFromIpApi } from "@/services/ipApiService";
-import { ReverseGeocoding } from "@/services/weatherService";
+import { Geocoding } from "@/services/weatherService";
 import { GeolocationFromNavigator } from "@/utils";
 
 export type NormalizedGeolocation = {
@@ -23,12 +23,14 @@ export type NormalizedGeolocation = {
 export const normalizeGeolocationData = (
   ipApiData: GeolocationFromIpApi,
   geoFromNavigator: GeolocationFromNavigator,
-  reverseGeocodingData: ReverseGeocoding[]
+  reverseGeocodingData: Geocoding[]
 ): NormalizedGeolocation => {
   const { country, countryCode, regionName, timezone } = ipApiData;
-  const [{ name, state, ...restOfReverseGeocodingData }] = reverseGeocodingData;
+  const [{ name, state, local_names, ...restOfReverseGeocodingData }] =
+    reverseGeocodingData;
+  const city = local_names?.es ?? name;
   return {
-    city: name, // para unificar el nombre del campo
+    city, // para unificar el nombre del campo
     state: state ?? regionName, // state, puede no estar
     timezone,
     ...restOfReverseGeocodingData,

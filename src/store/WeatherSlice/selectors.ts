@@ -27,6 +27,12 @@ export const selectCurrentHourlyWeather = createSelector(
   (currentWeather) => currentWeather?.hourly?.slice(1) // no interesa la hora actual
 );
 
+// El clima en la ciudad actual, por hora
+export const selectCurrentDailyWeather = createSelector(
+  [selectCurrentWeather],
+  (currentWeather) => currentWeather?.daily?.slice(1) // no interesa el día actual
+);
+
 // El resto de las ciudades sin la ciudad actual
 export const selectOtherCitiesWeather = createSelector(
   [selectCurrentCity, selectSlice],

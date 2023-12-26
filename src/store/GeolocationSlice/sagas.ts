@@ -1,10 +1,7 @@
-import { all, call, put, select, takeLatest } from "redux-saga/effects";
+import { all, call, put, select, take, takeLatest } from "redux-saga/effects";
 import { geolocationRequest, setGeolocation } from "./reducers";
 import { Weather } from "@/store/WeatherSlice";
-import {
-  fetchReverseGeocoding,
-  ReverseGeocoding,
-} from "@/services/weatherService";
+import { Geocoding, fetchReverseGeocoding } from "@/services/weatherService";
 import {
   fetchGeolocationFromIpApi,
   GeolocationFromIpApi,
@@ -26,6 +23,7 @@ import { selectGeolocation } from ".";
 import { selectWeather } from "../WeatherSlice/selectors";
 
 export function* fetchGeolocation(): Generator {
+  yield take("persist/REHYDRATE");
   // Se necesitan ambos llamados, también ip-api para conocer la ciudad actual
   // en paralelo también se se selecciona la geo desde el store
   const geolocationSources = (yield all([
@@ -33,6 +31,8 @@ export function* fetchGeolocation(): Generator {
     call(fetchGeolocationFromIpApiGenerator),
     select(selectGeolocation),
   ])) as [GeolocationFromNavigator, GeolocationFromIpApi, Geolocation];
+
+  console.log({ geolocationSources });
 
   if (!geolocationSources.some(Boolean)) {
     // Primer ingreso y sin conexión
@@ -85,12 +85,13 @@ function* fetchGeolocationFromReverseGeocodingOrIpApi(
     return normalizeGeolocationDataFromIpaApi(geoFromIpApi);
   // si se obtiene la ubicación, nos quedamos con la ciudad haciendo geocoding inverso
   // dado que ip-api puede no ser preciso
-  const { data: reverseGeocodingResullt, ok }: FetchResult<ReverseGeocoding[]> =
+  const { data: reverseGeocodingResullt, ok }: FetchResult<Geocoding[]> =
     yield call(
       fetchReverseGeocoding,
       geoFromNavigator.lat,
       geoFromNavigator.lon
     );
+  console.log({ reverseGeocodingResullt, ok });
   // si se puede obtener la geo reversa la usamos, sino nos quedamos con ip-api
   return ok
     ? normalizeGeolocationData(

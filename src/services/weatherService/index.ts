@@ -26,18 +26,11 @@ export async function fetchDirectGeocoding(
   return await safeFetch<Geocoding[]>(`${baseUrl}/geo/direct?city=${city}`);
 }
 
-export type ReverseGeocoding = {
-  name: string;
-  lat: number;
-  lon: number;
-  country: string;
-  state: string;
-};
 export async function fetchReverseGeocoding(
   lat: number,
   lon: number
-): Promise<FetchResult<ReverseGeocoding>> {
-  return await safeFetch<ReverseGeocoding>(
+): Promise<FetchResult<Geocoding>> {
+  return await safeFetch<Geocoding>(
     `${baseUrl}/geo/reverse?lat=${lat}&lon=${lon}`
   );
 }

@@ -64,7 +64,14 @@ export type Weather = {
     moonset: number; // Time of moonset, Unix, UTC (optional)
     moon_phase: number; // Moon phase (0-1)
     summary: string; // Human-readable description of the weather conditions for the day
-    temp: number;
+    temp: {
+      day: number;
+      min: number;
+      max: number;
+      night: number;
+      eve: number;
+      morn: number;
+    };
     feels_like: number;
     pressure: number; // Atmospheric pressure on the sea level, hPa
     humidity: number; // Humidity, %
