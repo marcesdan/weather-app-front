@@ -21,6 +21,9 @@ export async function fetchGeolocationFromIpApi(): Promise<
   FetchResult<GeolocationFromIpApi>
 > {
   return await safeFetch<GeolocationFromIpApi>(
-    `${import.meta.env.VITE_IP_API_URL}?lang=es`
+    `${import.meta.env.VITE_IP_API_URL}?lang=es`,
+    {
+      referrerPolicy: "unsafe-url",
+    }
   );
 }
