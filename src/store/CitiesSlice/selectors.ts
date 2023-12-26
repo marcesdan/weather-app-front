@@ -1,5 +1,18 @@
 import { RootState } from "@/store";
+import { createSelector } from "@reduxjs/toolkit";
+import { CitiesState } from "./reducers";
 
-export const selectPrefetchedCities = (state: RootState) =>
-  state.cities.prefetched;
-export const selectCitiesStatus = (state: RootState) => state.cities.status;
+const selectState = createSelector(
+  (state: RootState) => state,
+  ({ cities }) => cities
+);
+
+export const selectPrefetchedCities = createSelector(
+  [selectState],
+  ({ prefetched }: CitiesState) => prefetched
+);
+
+export const selectPrefetchedStatus = createSelector(
+  [selectState],
+  ({ status }) => status
+);

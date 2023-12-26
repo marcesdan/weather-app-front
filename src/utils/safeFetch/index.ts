@@ -38,10 +38,8 @@ export default async function safeFetch<T = any>(
       errorData: null,
     };
   } catch (error: unknown) {
-    let errorMessage = "An unknown error occurred";
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
     console.error(errorMessage);
     return {
       data: null,

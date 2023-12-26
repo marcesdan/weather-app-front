@@ -4,18 +4,28 @@ import {
   prefetchCityRequest,
   prefetchCitySuccess,
   prefetchCityNotFound,
-  Geocoding,
+  prefetchCityFailed,
 } from "./reducers";
-import { fetchDirectGeocoding } from "@/services/weatherService";
+import { Geocoding, fetchDirectGeocoding } from "@/services/weatherService";
+import { FetchResult } from "../../utils/safeFetch/index";
+import { normalizeGeocodingData } from "./normalizers";
 
 function* prefetchCity(action: PayloadAction<string>): Generator {
-  const cityInfo = (yield call(
-    fetchDirectGeocoding,
-    action.payload
-  )) as Geocoding[];
-  yield put(
-    cityInfo?.length ? prefetchCitySuccess(cityInfo) : prefetchCityNotFound()
-  );
+  const {
+    data: geoCodingData,
+    ok,
+    status,
+    problem,
+    errorData,
+  } = (yield call(fetchDirectGeocoding, action.payload)) as FetchResult<
+    Geocoding[]
+  >;
+  const getActionToDispatch = () => {
+    if (!ok) return prefetchCityFailed({ status, problem, errorData });
+    if (!geoCodingData?.length) return prefetchCityNotFound();
+    return prefetchCitySuccess(normalizeGeocodingData(geoCodingData));
+  };
+  yield put(getActionToDispatch());
 }
 
 const sagas = [takeLatest(prefetchCityRequest.type, prefetchCity)];

@@ -1,27 +1,27 @@
 import { PayloadAction } from "@reduxjs/toolkit";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { all, call, delay, put, select, takeLatest } from "redux-saga/effects";
 import { fetchWeatherInOneCall } from "@/services/weatherService";
-import { WeatherData } from "./types";
-import { weatherFailed, weatherRequest, weatherSuccess } from "./reducer";
-import { FetchResult } from "../../utils/safeFetch/index";
+import { Weather } from "./types";
+import {
+  weatherFailed,
+  weatherRequest,
+  weatherSuccess,
+  weatherUpdate,
+} from "./reducer";
+import { FetchResult } from "@/utils/safeFetch";
+import { AddCityPayload } from "@/components/molecules/PrefetchedCitiesList";
+import { selectWeather } from "./selectors";
 
-export type AddCityPayload = {
-  lat: number;
-  lon: number;
-  city: string;
-};
-
-export function* fetchWeather(
-  action: PayloadAction<AddCityPayload>
-): Generator {
-  const { lat, lon, city } = action.payload;
+export function* fetchWeather({
+  payload: { lat, lon, city },
+}: PayloadAction<AddCityPayload>): Generator {
   const {
     data: weather,
     ok,
     status,
     problem,
     errorData,
-  } = (yield call(fetchWeatherInOneCall, lat, lon)) as FetchResult<WeatherData>;
+  } = (yield call(fetchWeatherInOneCall, lat, lon)) as FetchResult<Weather>;
   yield put(
     ok
       ? weatherSuccess({ ...weather, city })
@@ -29,6 +29,21 @@ export function* fetchWeather(
   );
 }
 
-const sagas = [takeLatest(weatherRequest.type, fetchWeather)];
+export function* updateWeatherDeamon() {
+  while (true) {
+    const weather: Record<string, Weather> = yield select(selectWeather);
+    yield all(
+      Object.values(weather).map(({ lat, lon, city }) =>
+        put(weatherUpdate({ lat, lon, city }))
+      )
+    );
+    yield delay(600000); // 10 minutes
+  }
+}
+
+const sagas = [
+  takeLatest(weatherRequest.type, fetchWeather),
+  takeLatest(weatherUpdate.type, fetchWeather),
+];
 
 export default sagas;

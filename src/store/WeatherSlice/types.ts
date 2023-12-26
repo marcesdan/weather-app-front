@@ -1,4 +1,4 @@
-export type WeatherData = {
+export type Weather = {
   city: string;
   lat: number; // Latitude of the location, decimal (−90; 90)
   lon: number; // Longitude of the location, decimal (-180; 180)

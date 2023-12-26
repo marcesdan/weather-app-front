@@ -1,2 +1,3 @@
-export { default as weather, weatherRequest } from "./reducer";
-export type { WeatherData } from "./types";
+export { default as weather, weatherRequest, removeCity } from "./reducer";
+export { selectCurrentWeather } from "./selectors";
+export type { Weather } from "./types";

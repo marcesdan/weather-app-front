@@ -1,10 +1,11 @@
 import styled from "styled-components";
 import { FiAlertCircle } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
+import RootContainer from "@/styles/RootContainer";
 
 export default function ErrorPage() {
   return (
-    <ErrorContainer>
+    <RootContainer>
       <ErrorIcon />
       <ErrorMessage>
         Something is wrong, check your internet connection, or try again in a
@@ -13,20 +14,9 @@ export default function ErrorPage() {
       <Link to="/" reloadDocument>
         Try Again
       </Link>
-    </ErrorContainer>
+    </RootContainer>
   );
 }
-
-const ErrorContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100% - 40px);
-  text-align: center;
-  padding: 20px;
-  background-color: #f8f9fa;
-`;
 
 const ErrorIcon = styled(FiAlertCircle)`
   font-size: 72px;

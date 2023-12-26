@@ -20,6 +20,8 @@ import {
   normalizeGeolocationData,
   normalizeGeolocationDataFromIpaApi,
 } from "./normalizers";
+import { setCurrentCity } from "../WeatherSlice/reducer";
+import { updateWeatherDeamon } from "../WeatherSlice/sagas";
 
 export function* fetchGeolocation(): Generator {
   // se necesitan ambos llamados, también ip-api para conocer la ciudad actual
@@ -48,8 +50,16 @@ export function* fetchGeolocation(): Generator {
     // se guarda la geolocalización en el store
     put(setGeolocation(geolocation)),
     // se busca el clima de la ciudad actual al cargar la app
-    put(weatherRequest(geolocation)),
+    put(setCurrentCity(geolocation.city)),
+    put(
+      weatherRequest({
+        city: geolocation.city,
+        lat: geolocation.lat,
+        lon: geolocation.lon,
+      })
+    ),
   ]);
+  yield call(updateWeatherDeamon);
 }
 
 function* fetchGeolocationFromIpApiGenerator() {

@@ -1,20 +1,14 @@
 import { Outlet } from "react-router-dom";
-import styled from "styled-components";
-import { Header } from "../../organisms";
+import { Header } from "@/components/organisms";
+import RootContainer from "@/styles/RootContainer";
+import { Footer } from "@/components/atoms";
 
 export default function RootLayout() {
   return (
     <RootContainer>
       <Header />
       <Outlet />
+      <Footer />
     </RootContainer>
   );
 }
-
-const RootContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  background-color: #ffffff;
-`;

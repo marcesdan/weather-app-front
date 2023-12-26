@@ -1,40 +1,51 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { IoIosArrowBack, IoIosMore } from "react-icons/io";
+import { HiDotsVertical } from "react-icons/hi";
 import styled from "styled-components";
-import { CurrentLocation, CurrentWeather } from "@/components/organisms";
 
-const HeaderContainer = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-`;
-
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: inherit;
-`;
+import {
+  CurrentLocation,
+  CurrentWeather,
+  BackButton,
+} from "@/components/organisms";
+import IconButton from "@/styles/IconButton";
+import { useAppSelector } from "@/hooks";
+import { Weather } from "@/store/WeatherSlice/types";
+import { selectCurrentWeather } from "@/store/WeatherSlice";
+import Skeleton from "react-loading-skeleton";
 
 export default function Header() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
+  const currentWeather: Weather = useAppSelector(selectCurrentWeather);
+  const isLoading = !currentWeather?.current;
   return (
     <HeaderContainer>
-      {location.pathname !== "/" && (
-        <IconButton onClick={() => navigate(-1)}>
-          <IoIosArrowBack size={24} />
+      <TopContainer>
+        <BackButton />
+        <CurrentLocation
+          city={currentWeather.city}
+          timezoneOffset={currentWeather?.timezone_offset}
+        />
+        <IconButton>
+          <HiDotsVertical size={24} />
         </IconButton>
+      </TopContainer>
+      {!isLoading ? (
+        <CurrentWeather currentWeather={currentWeather} />
+      ) : (
+        <Skeleton count={12} containerClassName="flex-1" />
       )}
-      <div>
-        <CurrentLocation />
-        <CurrentWeather />
-      </div>
-      <IconButton>
-        <IoIosMore size={24} />
-      </IconButton>
     </HeaderContainer>
   );
 }
+
+const HeaderContainer = styled.header`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+`;
+
+const TopContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+`;

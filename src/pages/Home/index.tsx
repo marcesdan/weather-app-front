@@ -1,9 +1,9 @@
-import { OtherCities, Forecast } from "../../components/organisms";
+import { OtherCities, NextHours } from "@/components/organisms";
 
 export default function Home() {
   return (
     <>
-      <Forecast />
+      <NextHours />
       <OtherCities />
     </>
   );
