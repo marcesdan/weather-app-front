@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Weather } from "./types";
 import { FetchErrorResponse } from "@/utils";
-import { AddCityPayload } from "@/components/molecules/PrefetchedCitiesList";
+import { AddCityPayload } from "@/components/organisms/AddCities";
 
 type WeatherState = {
   currentCity: string;
@@ -21,15 +21,20 @@ export const weatherSlice = createSlice({
   name: "weather",
   initialState,
   reducers: {
+    addCity: (
+      state,
+      { payload: { lat, lon, city } }: PayloadAction<AddCityPayload>
+    ) => {
+      state.weather[city] = { city, lat, lon } as Weather;
+    },
     weatherRequest: (
       state,
       { payload: { lat, lon, city } }: PayloadAction<AddCityPayload>
     ) => {
       state.status = "loading";
-      if (!state.weather[city]) {
-        // #1. para una UI optimista, se muestra la ciudad agregada aunque esté cargando
-        state.weather[city] = { city } as Weather;
-      }
+      // #1. para una UI optimista, se muestra la ciudad agregada aunque esté cargando
+      if (!state.weather[city])
+        state.weather[city] = { city, lat, lon } as Weather;
     },
     weatherSuccess: (state, { payload }: PayloadAction<Weather>) => {
       state.status = "success";
@@ -58,6 +63,7 @@ export const weatherSlice = createSlice({
 });
 
 export const {
+  addCity,
   weatherRequest,
   weatherSuccess,
   weatherFailed,

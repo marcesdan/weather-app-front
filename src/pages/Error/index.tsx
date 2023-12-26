@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { FiAlertCircle } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
-import RootContainer from "@/styles/RootContainer";
+import { RootContainer } from "@/components/styles";
 
 export default function ErrorPage() {
   return (

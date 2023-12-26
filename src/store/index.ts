@@ -12,7 +12,7 @@ const persistedReducer = persistReducer(
   {
     key: "root",
     storage,
-    blacklist: ["geolocation", "cities"],
+    blacklist: ["cities"],
   },
   combineReducers({
     geolocation,

@@ -1,16 +1,13 @@
 import { HiDotsVertical } from "react-icons/hi";
 import styled from "styled-components";
+import Skeleton from "react-loading-skeleton";
 
-import {
-  CurrentLocation,
-  CurrentWeather,
-  BackButton,
-} from "@/components/organisms";
-import IconButton from "@/styles/IconButton";
+import { CurrentLocation, BackButton } from "@/components/organisms";
+import { IconButton } from "@/components/styles";
 import { useAppSelector } from "@/hooks";
 import { Weather } from "@/store/WeatherSlice/types";
 import { selectCurrentWeather } from "@/store/WeatherSlice";
-import Skeleton from "react-loading-skeleton";
+import { CurrentWeather } from "@/components/molecules";
 
 export default function Header() {
   const currentWeather: Weather = useAppSelector(selectCurrentWeather);

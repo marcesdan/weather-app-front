@@ -4,6 +4,7 @@ export default createGlobalStyle`
   html, body, #root {
     margin: 0;
     padding: 0;
+    height: 100%;
   }
   body {
     font-family: 'Roboto', sans-serif;

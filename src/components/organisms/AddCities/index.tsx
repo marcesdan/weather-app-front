@@ -8,7 +8,7 @@ import {
   selectPrefetchedStatus,
 } from "@/store/CitiesSlice";
 import { debounce } from "lodash-es";
-import AddCitySelect from "@/styles/AddCitySelect";
+import { AddCitySelect, Button } from "@/components/styles";
 
 export type AddCityPayload = {
   lat: number;
@@ -78,7 +78,6 @@ const Container = styled.div`
   flex-direction: column;
   align-items: start;
   gap: 8px;
-
   @media (min-width: 768px) {
     max-width: 800px;
   }
@@ -97,30 +96,6 @@ const SelectContainer = styled.div`
   flex-wrap: wrap;
   @media (min-width: 420px) {
     flex-wrap: nowrap;
-  }
-`;
-
-const Button = styled.button`
-  background-color: #225bba;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  &:hover {
-    background-color: #1a4a8d;
-  }
-  &:focus {
-    outline: none;
-  }
-  &:disabled {
-    opacity: 0.5; // Add this line
-  }
-  width: 100%;
-  @media (min-width: 420px) {
-    width: 33%;
   }
 `;
 

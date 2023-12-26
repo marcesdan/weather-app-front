@@ -16,6 +16,7 @@ export const GeolocationSlice = createSlice({
   initialState,
   reducers: {
     setGeolocation: (state, action: PayloadAction<NormalizedGeolocation>) => {
+      state.status = "success";
       state.geolocation = action.payload;
     },
   },

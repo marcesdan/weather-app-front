@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { ExistingCities, AddCities } from "@/components/organisms";
 import { BackButton } from "@/components/organisms";
 import { Footer } from "@/components/atoms";
-import { RootContainer } from "@/components/styles";
+import { Content, RootContainer } from "@/components/styles";
 
 export default function OtherCities() {
   return (
@@ -12,7 +12,7 @@ export default function OtherCities() {
         <Header>
           <BackButton />
           <Title>Ciudades</Title>
-          <div></div>
+          <div />
         </Header>
         <AddCities />
         <ExistingCities />
@@ -27,10 +27,6 @@ const Header = styled.header`
   align-items: flex-start;
   padding: 10px;
   margin-bottom: 10px;
-`;
-
-const Content = styled.div`
-  flex: 1 0 auto;
 `;
 
 const Title = styled.h1`

@@ -1,6 +1,6 @@
-import { all, call, put, takeLatest } from "redux-saga/effects";
+import { all, call, put, select, takeLatest } from "redux-saga/effects";
 import { geolocationRequest, setGeolocation } from "./reducers";
-import { weatherRequest } from "@/store/WeatherSlice";
+import { Weather } from "@/store/WeatherSlice";
 import {
   fetchReverseGeocoding,
   ReverseGeocoding,
@@ -20,45 +20,51 @@ import {
   normalizeGeolocationData,
   normalizeGeolocationDataFromIpaApi,
 } from "./normalizers";
-import { setCurrentCity } from "../WeatherSlice/reducer";
+import { addCity, setCurrentCity } from "../WeatherSlice/reducer";
 import { updateWeatherDeamon } from "../WeatherSlice/sagas";
+import { selectGeolocation } from ".";
+import { selectWeather } from "../WeatherSlice/selectors";
 
 export function* fetchGeolocation(): Generator {
-  // se necesitan ambos llamados, también ip-api para conocer la ciudad actual
-  const [geoFromNavigator, geoFromIpApi]: any = yield all([
+  // Se necesitan ambos llamados, también ip-api para conocer la ciudad actual
+  // en paralelo también se se selecciona la geo desde el store
+  const geolocationSources = (yield all([
     call(getGeolocation),
     call(fetchGeolocationFromIpApiGenerator),
-  ]);
+    select(selectGeolocation),
+  ])) as [GeolocationFromNavigator, GeolocationFromIpApi, Geolocation];
 
-  if (!geoFromIpApi) {
+  if (!geolocationSources.some(Boolean)) {
+    // Primer ingreso y sin conexión
     navigationService.navigateTo("/error");
     return;
   }
-
+  const [geoFromNavigator, geoFromIpApi] = geolocationSources;
   const geolocation = (yield call(
-    fetchGeolocationWithReverseGeocoding,
+    fetchGeolocationFromReverseGeocodingOrIpApi,
     geoFromNavigator,
     geoFromIpApi
   )) as NormalizedGeolocation;
 
-  if (!geolocation) {
-    navigationService.navigateTo("/error");
-    return;
-  }
-
   yield all([
-    // se guarda la geolocalización en el store
+    // Se guarda la geolocalización en el store
     put(setGeolocation(geolocation)),
-    // se busca el clima de la ciudad actual al cargar la app
     put(setCurrentCity(geolocation.city)),
-    put(
-      weatherRequest({
+  ]);
+
+  const weather = (yield select(selectWeather)) as Record<string, Weather>;
+  if (!weather[geolocation.city]?.current) {
+    // Si la ciudad que viene de la geo no aún está cargada, hay que agregarla mediante reducer.
+    // Pero sín la petición a la api, dado que de eso se encarga el demonio updater
+    yield put(
+      addCity({
         city: geolocation.city,
         lat: geolocation.lat,
         lon: geolocation.lon,
       })
-    ),
-  ]);
+    );
+  }
+  // Exista o no en el store la ciudad que viene de la geo, se invoca al demonio updated
   yield call(updateWeatherDeamon);
 }
 
@@ -70,10 +76,10 @@ function* fetchGeolocationFromIpApiGenerator() {
   navigationService.navigateTo("/error");
 }
 
-function* fetchGeolocationWithReverseGeocoding(
+function* fetchGeolocationFromReverseGeocodingOrIpApi(
   geoFromNavigator: GeolocationFromNavigator,
   geoFromIpApi: GeolocationFromIpApi
-): Generator<any, NormalizedGeolocation | undefined, any> {
+): Generator<any, NormalizedGeolocation, any> {
   // si no se puede obtener desde el gps nos quedamos con lo que viene de ip-api
   if (!geoFromNavigator)
     return normalizeGeolocationDataFromIpaApi(geoFromIpApi);
@@ -85,12 +91,14 @@ function* fetchGeolocationWithReverseGeocoding(
       geoFromNavigator.lat,
       geoFromNavigator.lon
     );
-  if (ok)
-    return normalizeGeolocationData(
-      geoFromIpApi,
-      geoFromNavigator,
-      reverseGeocodingResullt
-    );
+  // si se puede obtener la geo reversa la usamos, sino nos quedamos con ip-api
+  return ok
+    ? normalizeGeolocationData(
+        geoFromIpApi,
+        geoFromNavigator,
+        reverseGeocodingResullt
+      )
+    : normalizeGeolocationDataFromIpaApi(geoFromIpApi);
 }
 
 const sagas = [takeLatest(geolocationRequest.type, fetchGeolocation)];

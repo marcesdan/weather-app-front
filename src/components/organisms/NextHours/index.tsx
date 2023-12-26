@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import NextHorusList from "../../molecules/NextHoursList/index";
 
-export default function Forecast() {
+export default function NextHours() {
   const hourly = useAppSelector(selectCurrentHourlyWeather);
   return (
     <>

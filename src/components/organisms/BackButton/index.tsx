@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import IconButton from "@/styles/IconButton";
 import styled from "styled-components";
+import { IconButton } from "@/components/styles";
 
 export default function BackButton() {
   const navigate = useNavigate();

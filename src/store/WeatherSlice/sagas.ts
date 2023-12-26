@@ -9,8 +9,8 @@ import {
   weatherUpdate,
 } from "./reducer";
 import { FetchResult } from "@/utils/safeFetch";
-import { AddCityPayload } from "@/components/molecules/PrefetchedCitiesList";
 import { selectWeather } from "./selectors";
+import { AddCityPayload } from "@/components/organisms/AddCities";
 
 export function* fetchWeather({
   payload: { lat, lon, city },

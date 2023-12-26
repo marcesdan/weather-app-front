@@ -3,13 +3,13 @@ import styled from "styled-components";
 import { FiPlus } from "react-icons/fi";
 import { useAppSelector } from "@/hooks";
 import { selectOtherCitiesWeather } from "@/store/WeatherSlice/selectors";
-import IconButton from "@/styles/IconButton";
 import { OtherCitiesList } from "@/components/molecules";
 import Skeleton from "react-loading-skeleton";
+import { IconButton } from "@/components/styles";
 
 export default function OtherCities() {
   const otherCities = useAppSelector(selectOtherCitiesWeather);
-  const isLoading = !otherCities?.length;
+  const isLoading = otherCities.some(({ current }) => !current);
   return (
     <PageContainer>
       <TitleContainer>
