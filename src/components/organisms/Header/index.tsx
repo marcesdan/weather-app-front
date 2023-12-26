@@ -8,13 +8,14 @@ import { useAppSelector } from "@/hooks";
 import { Weather } from "@/store/WeatherSlice/types";
 import { selectCurrentWeather } from "@/store/WeatherSlice";
 import { CurrentWeather } from "@/components/molecules";
+import RowContainer from "@/components/styles/RowContainer";
 
 export default function Header() {
   const currentWeather: Weather = useAppSelector(selectCurrentWeather);
   const isLoading = !currentWeather?.current;
   return (
     <HeaderContainer>
-      <TopContainer>
+      <RowContainer>
         <BackButton />
         <CurrentLocation
           city={currentWeather.city}
@@ -23,7 +24,7 @@ export default function Header() {
         <IconButton>
           <HiDotsVertical size={24} />
         </IconButton>
-      </TopContainer>
+      </RowContainer>
       {!isLoading ? (
         <CurrentWeather currentWeather={currentWeather} />
       ) : (
@@ -38,11 +39,4 @@ const HeaderContainer = styled.header`
   flex-direction: column;
   align-items: center;
   padding-top: 10px;
-`;
-
-const TopContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
 `;

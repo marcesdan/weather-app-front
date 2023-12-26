@@ -7,7 +7,7 @@ import "dayjs/locale/es";
 import "react-loading-skeleton/dist/skeleton.css";
 
 import { RootLayout } from "@/components/layouts";
-import { Forecast, Home, NotFound, Error, NextDays, Cities } from "./pages";
+import { Home, Error, NextDays, Cities } from "./pages";
 import { navigationService } from "@/utils";
 
 dayjs.extend(localizedFormat);
@@ -23,12 +23,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<RootLayout />}>
           <Route index element={<Home />} />
-          <Route path="horas" element={<Forecast />} />
-          <Route path="dias" element={<NextDays />} />
         </Route>
         <Route path="/ciudades" element={<Cities />} />
+        <Route path="dias" element={<NextDays />} />
         <Route path="/error" element={<Error />} />
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </SkeletonTheme>
   );

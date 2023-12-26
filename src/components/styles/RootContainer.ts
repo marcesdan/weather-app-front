@@ -5,7 +5,7 @@ export default styled.div`
   flex-direction: column;
   max-width: 600px;
   margin: auto;
-  min-height: 100%;
+  min-height: 100vh;
   background: #ffffff;
   box-shadow: 0 0 0.938rem #0000001a;
   padding: 0 1em;
