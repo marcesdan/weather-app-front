@@ -27,6 +27,7 @@ const IconWrapper = styled.div`
   align-items: center;
   overflow: hidden;
   overflow: hidden;
+  min-height: 90px;
 `;
 
 const StyledImg = styled.img`

@@ -81,6 +81,8 @@ const Container = styled.div`
   @media (min-width: 768px) {
     max-width: 800px;
   }
+  padding: 10px;
+  margin-top: 10px;
 `;
 
 const Label = styled.label`

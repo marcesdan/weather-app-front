@@ -5,5 +5,4 @@ export default styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  padding-top: 16px;
 `;

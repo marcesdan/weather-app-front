@@ -1,9 +1,7 @@
-import { HiDotsVertical } from "react-icons/hi";
 import styled from "styled-components";
 import Skeleton from "react-loading-skeleton";
 
 import { CurrentLocation, BackButton } from "@/components/organisms";
-import { IconButton } from "@/components/styles";
 import { useAppSelector } from "@/hooks";
 import { Weather } from "@/store/WeatherSlice/types";
 import { selectCurrentWeather } from "@/store/WeatherSlice";
@@ -21,9 +19,7 @@ export default function Header() {
           city={currentWeather.city}
           timezoneOffset={currentWeather?.timezone_offset}
         />
-        <IconButton>
-          <HiDotsVertical size={24} />
-        </IconButton>
+        <div />
       </RowContainer>
       {!isLoading ? (
         <CurrentWeather currentWeather={currentWeather} />
