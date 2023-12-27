@@ -29,14 +29,17 @@ describe("normalizeGeolocationData", () => {
       {
         lat: 37.7749,
         lon: -122.4194,
-        name: "San Francisco Real", // queremos matchear con este nombre
+        name: "San Francisco", // queremos matchear con este nombre
         state: "California",
         country: "United States",
+        local_names: {
+          es: "San Francisco ES",
+        },
       },
     ];
 
     const expectedNormalizedGeolocation = {
-      city: "San Francisco Real",
+      city: "San Francisco ES",
       state: "California",
       timezone: "America/Los_Angeles",
       country: "United States",

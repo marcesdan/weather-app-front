@@ -14,13 +14,15 @@ export default function CurrentLocation({
   const dateOnCurrentCity =
     timezoneOffset &&
     dayjs().add(timezoneOffset, "second").format("dddd, D [de] MMMM [de] YYYY");
+  if (isLoading)
+    return <Skeleton count={2} containerClassName="flex-1" width="100%" />;
   return (
     <Container>
       <CityTitle>
         <IoMdPin size={22} />
         {city}
       </CityTitle>
-      {!isLoading && <DateTitle>{dateOnCurrentCity}</DateTitle>}
+      <DateTitle>{dateOnCurrentCity}</DateTitle>
     </Container>
   );
 }
