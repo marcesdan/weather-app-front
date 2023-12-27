@@ -20,11 +20,7 @@ export default function CurrentLocation({
         <IoMdPin size={22} />
         {city}
       </CityTitle>
-      {!isLoading ? (
-        <DateTitle>{dateOnCurrentCity}</DateTitle>
-      ) : (
-        <Skeleton count={2} containerClassName="flex-1" />
-      )}
+      {!isLoading && <DateTitle>{dateOnCurrentCity}</DateTitle>}
     </Container>
   );
 }

@@ -8,7 +8,7 @@ import styled from "styled-components";
 
 export default function NextHorusList({ hours }: { hours: Weather["hourly"] }) {
   const containerRef = useHorizontalScroll();
-  if (!hours?.length) return <Skeleton count={10} width="100%" />;
+  if (!hours?.length) return <Skeleton count={12} width="100%" />;
   return (
     <HoursContainer ref={containerRef}>
       {hours.map((hour) => (

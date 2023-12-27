@@ -32,8 +32,6 @@ export function* fetchGeolocation(): Generator {
     select(selectGeolocation),
   ])) as [GeolocationFromNavigator, GeolocationFromIpApi, Geolocation];
 
-  console.log({ geolocationSources });
-
   if (!geolocationSources.some(Boolean)) {
     // Primer ingreso y sin conexión
     navigationService.navigateTo("/error");
@@ -91,7 +89,6 @@ function* fetchGeolocationFromReverseGeocodingOrIpApi(
       geoFromNavigator.lat,
       geoFromNavigator.lon
     );
-  console.log({ reverseGeocodingResullt, ok });
   // si se puede obtener la geo reversa la usamos, sino nos quedamos con ip-api
   return ok
     ? normalizeGeolocationData(
