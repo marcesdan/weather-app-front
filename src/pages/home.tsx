@@ -15,7 +15,7 @@ import { evaluate } from "@/lib/alerts";
 export default function Home() {
   const here = useHere();
   const qc = useQueryClient();
-  const [unit] = usePref<WindUnit>("unit", "kn");
+  const [unit] = usePref<WindUnit>("unit", "kmh");
   const saved = usePlaces();
   // Location blocked and server down: fall back to the first saved place instead of a dead end.
   const spot = here.data ?? (here.isError && saved[0] ? { ...saved[0], detail: saved[0].detail ?? "", source: "ip" as const } : undefined);

@@ -18,17 +18,19 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: WindUnit; hou
   const cond = s.weather[0];
   const today = w.daily[0];
   return (
-    <section aria-label={h ? `Pronóstico a las ${fmtHour(h.dt, w.timezone)}` : "Ahora"} aria-live="polite" className="rise pt-4 pb-2 text-center">
-      <div className="flex h-7 items-center justify-center">
-        {h ? (
+    <section aria-label={h ? `Pronóstico a las ${fmtHour(h.dt, w.timezone)}` : "Ahora"} className="rise pt-4 pb-2 text-center">
+      <p className="sr-only" aria-live="polite">
+        {h ? `Mostrando las ${fmtHour(h.dt, w.timezone)}` : ""}
+      </p>
+      <div className="flex h-7 items-center justify-center gap-2">
+        <ConditionIcon code={cond?.icon} animated={!h} className="-my-5 size-16" />
+        {h && (
           <button
             onClick={onNow}
             className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60"
           >
             A las {fmtHour(h.dt, w.timezone)} <Undo2 aria-hidden className="size-3.5" /> <span className="sr-only">Volver a</span> ahora
           </button>
-        ) : (
-          <ConditionIcon code={cond?.icon} animated className="-my-5 size-16" />
         )}
       </div>
       <p className="mt-3 text-[6.5rem] leading-[0.9] font-extralight tracking-[-0.04em] tabular-nums" data-testid="current-temp">
@@ -43,7 +45,10 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: WindUnit; hou
         <Fact icon={<Droplets className="size-4" />} label="Humedad" value={`${s.humidity}%`} />
         <Fact icon={<WindArrow deg={s.wind_deg} className="size-4" />} label={`Viento ${compass(s.wind_deg)}`} value={fmtWind(s.wind_speed, unit)} />
       </dl>
-      {!h && <p className="mx-auto mt-4 max-w-sm text-sm text-pretty">{nextDay(w.hourly, w.timezone, unit)}</p>}
+      {/* Stays in the layout while an hour is picked, so the strip below never jumps. */}
+      <p className={cn("mx-auto mt-4 max-w-sm text-sm text-pretty transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
+        {nextDay(w.hourly, w.timezone, unit)}
+      </p>
     </section>
   );
 }
@@ -51,7 +56,7 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: WindUnit; hou
 function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="px-2">
-      <dt className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+      <dt className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
         {icon}
         {label}
       </dt>
@@ -74,7 +79,7 @@ export function HourCell({ h, tz, selected, onPick }: { h: OneCall["hourly"][num
         selected ? "bg-primary/90 text-primary-foreground [text-shadow:none]" : "hover:bg-accent",
       )}
     >
-      <span className={cn("text-xs tabular-nums", selected ? "" : "text-muted-foreground")}>{fmtHour(h.dt, tz)}</span>
+      <span className={cn("text-sm tabular-nums", selected ? "" : "text-muted-foreground")}>{fmtHour(h.dt, tz)}</span>
       <ConditionIcon code={cond?.icon} className="size-7" />
       <span className="font-semibold tabular-nums">{Math.round(h.temp)}°</span>
       <span className={cn("text-xs tabular-nums", h.pop >= 0.3 ? (selected ? "" : "text-[oklch(0.86_0.09_235)]") : "opacity-0")}>{pct(h.pop)}</span>

@@ -97,6 +97,10 @@ button.text-base {
   background: transparent;
   text-shadow: 0 1px 2px oklch(0.15 0.03 260 / 0.35);
 }
+/* Under the sky canvas (first paint, Ionic transitions) show night-sky blue, never the cream page ground. */
+body:has(.sky-backdrop) {
+  background: oklch(0.25 0.06 260);
+}
 .sky-page ion-content {
   --background: transparent;
   --color: var(--foreground); /* ion-content paints its own text colour otherwise */

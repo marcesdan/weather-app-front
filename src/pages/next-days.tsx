@@ -9,7 +9,7 @@ export default function NextDays() {
   const here = useHere();
   const spot = here.data;
   const { data: w } = useWeather(spot?.lat ?? 0, spot?.lon ?? 0, !!spot);
-  const [unit] = usePref<WindUnit>("unit", "kn");
+  const [unit] = usePref<WindUnit>("unit", "kmh");
   const days = w?.daily.slice(1) ?? [];
   // One shared scale so each day's bar shows where it sits in the week.
   const lo = Math.min(...days.map((d) => d.temp.min));

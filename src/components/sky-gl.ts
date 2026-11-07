@@ -29,23 +29,23 @@ void main() {
   vec3 nightTop = vec3(0.02, 0.035, 0.10), nightLow = vec3(0.07, 0.09, 0.20);
   vec3 dayTop = vec3(0.10, 0.31, 0.64), dayLow = vec3(0.34, 0.55, 0.80);
   vec3 sky = mix(mix(nightLow, nightTop, uv.y), mix(dayLow, dayTop, uv.y), uDay);
-  sky = mix(sky, vec3(0.96, 0.55, 0.30), uGolden * pow(1.0 - uv.y, 2.5) * 0.7);
+  sky = mix(sky, vec3(0.96, 0.55, 0.30), uGolden * (1.0 - 0.8 * uCloud) * pow(1.0 - uv.y, 2.5) * 0.7); // no muddy dusk under overcast
   float grey = clamp(uCloud * 0.7 + uStorm * 0.3 + uRain * 0.2, 0.0, 1.0);
   vec3 overcast = mix(vec3(0.10, 0.12, 0.16), vec3(0.30, 0.34, 0.41), uDay) * (1.0 - 0.45 * uStorm);
   sky = mix(sky, overcast, grey * 0.85);
 
   // Stars and moon at night; sun by day. Both fade behind cloud.
   vec2 g = floor(p * 90.0);
-  float star = step(0.995, hash(g)) * smoothstep(0.22, 0.0, length(fract(p * 90.0) - 0.5)) * (0.6 + 0.4 * sin(uTime * 2.0 + hash(g + 3.0) * 30.0));
+  float star = step(0.995, hash(g)) * (1.0 - smoothstep(0.0, 0.22, length(fract(p * 90.0) - 0.5))) * (0.6 + 0.4 * sin(uTime * 2.0 + hash(g + 3.0) * 30.0));
   sky += star * (1.0 - uDay) * (1.0 - uCloud) * smoothstep(0.25, 0.8, uv.y);
   // The sun rises at the sides and passes above the top edge at noon, so its glow frames the reading
   // instead of sitting behind it. The moon keeps to the upper right.
   vec2 sp = mix(vec2(0.86 * aspect, 0.8), vec2(uSun.x * aspect, 0.16 + 0.98 * uSun.y), step(0.001, uDay));
   float d = length(p - sp);
   vec3 sunCol = mix(vec3(1.0, 0.72, 0.42), vec3(1.0, 0.95, 0.82), uSun.y);
-  float clear = 1.0 - uCloud * 0.85;
-  sky += uDay * clear * (sunCol * smoothstep(0.06, 0.045, d) + sunCol * 0.4 * exp(-d * 3.5));
-  sky += (1.0 - uDay) * clear * vec3(0.85, 0.88, 0.95) * (smoothstep(0.035, 0.03, d) + 0.12 * exp(-d * 9.0));
+  float clear = pow(1.0 - uCloud, 1.5); // a rain or storm deck hides the moon and sun
+  sky += uDay * clear * (sunCol * (1.0 - smoothstep(0.045, 0.06, d)) + sunCol * 0.4 * exp(-d * 3.5));
+  sky += (1.0 - uDay) * clear * vec3(0.85, 0.88, 0.95) * ((1.0 - smoothstep(0.03, 0.035, d)) + 0.12 * exp(-d * 9.0));
 
   // Two cloud decks, coverage from the reported cloud percentage.
   float cover = 1.0 - uCloud;
@@ -60,20 +60,33 @@ void main() {
   sky = mix(sky, cloudCol, c1 * 0.85);
   sky = mix(sky, cloudCol * 1.05, c2 * 0.6);
 
-  // Rain: thin streaks tilted by the wind, three depths.
-  float tilt = clamp(uWind.x * 0.035, -0.6, 0.6);
+  // Rain in real units: rows per screen, speed in screen-heights per second, short streaks with a bright head and a
+  // fading tail, sparse columns, pixel-true width. Everything scales with intensity, so drizzle reads as drizzle.
+  float tilt = clamp(uWind.x * 0.03, -0.45, 0.45);
+  float speed = mix(0.45, 1.0, uRain) + 0.15 * uStorm;            // screen-heights per second
+  float len = mix(0.025, 0.06, uRain);                            // streak length, fraction of screen height
+  float density = 0.33 * pow(uRain, 1.6);                         // share of cells with a drop
+  float peak = mix(0.08, 0.24, uRain);                            // per-streak alpha, near layer
+  const float ROWS = 7.0;
   float rain = 0.0;
   for (int i = 0; i < 3; i++) {
     float fi = float(i);
-    vec2 q = vec2(p.x + p.y * tilt, p.y) * vec2(70.0 + fi * 35.0, 2.5 + fi);
-    q.y += uTime * (9.0 + fi * 4.0);
+    float cols = 18.0 + fi * 8.0;
+    float parallax = 0.75 + fi * 0.25;
+    vec2 q = vec2((uv.x + uv.y * tilt / aspect) * cols, uv.y * ROWS + uTime * speed * parallax * ROWS);
     vec2 cell = floor(q);
     float h = hash(cell + fi * 7.0);
-    float x = abs(fract(q.x) - h);
-    float drop = smoothstep(0.06, 0.0, x) * smoothstep(0.0, 0.5, fract(q.y)) * step(1.0 - uRain * 0.9, h);
-    rain += drop * (0.35 + fi * 0.15);
+    float cellPx = uRes.x / cols;
+    float dx = abs(fract(q.x) - (0.15 + 0.7 * h)) * cellPx;      // distance to the streak in canvas pixels
+    float core = (1.0 - smoothstep(0.4, 1.2, dx));                        // at least one pixel wide, no aliasing
+    float tail = 1.0 - smoothstep(0.0, len * ROWS * parallax, fract(q.y)); // bright head at the bottom, tail above
+    float on = step(1.0 - density, hash(cell + 31.0 + fi));
+    rain += core * tail * on * peak * mix(0.5, 1.0, fi / 2.0);
   }
-  sky = mix(sky, vec3(0.80, 0.86, 0.95), clamp(rain, 0.0, 1.0) * 0.55 * uRain);
+  // Rain falls behind the reading: thinner across the hero band, like rain on a window you look through.
+  float hero = smoothstep(0.48, 0.6, uv.y) * (1.0 - smoothstep(0.9, 0.98, uv.y));
+  rain *= 1.0 - 0.55 * hero;
+  sky = mix(sky, vec3(0.82, 0.87, 0.95), min(rain, 0.3) * step(0.001, uRain));
 
   // Snow: soft flakes drifting with the wind.
   float snow = 0.0;
@@ -84,7 +97,7 @@ void main() {
     q.x += uTime * uWind.x * 0.05 + sin(uTime * 0.7 + q.y * 0.8) * 0.3;
     vec2 cell = floor(q);
     vec2 o = vec2(hash(cell), hash(cell + 9.0));
-    float f = smoothstep(0.09 - fi * 0.02, 0.0, length(fract(q) - o)) * step(0.45, hash(cell + 3.0));
+    float f = (1.0 - smoothstep(0.0, 0.09 - fi * 0.02, length(fract(q) - o))) * step(0.45, hash(cell + 3.0));
     snow += f;
   }
   sky = mix(sky, vec3(1.0), clamp(snow, 0.0, 1.0) * uSnow * 0.85);

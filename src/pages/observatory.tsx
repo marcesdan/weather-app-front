@@ -41,7 +41,7 @@ export default function Observatory() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [unit, setUnit] = usePref<WindUnit>("unit", "kn");
+  const [unit, setUnit] = usePref<WindUnit>("unit", "kmh");
   const [layer, setLayer] = useState<View>("wind");
   const [hour, setHour] = useState(0);
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
