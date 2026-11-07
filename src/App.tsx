@@ -7,6 +7,7 @@ import NextDays from "./pages/next-days";
 import Cities from "./pages/cities";
 import { ErrorPage, NotFound } from "./pages/error";
 import { useAlertWatch } from "./lib/notify";
+import { SkyLayer } from "./components/sky";
 
 setupIonicReact();
 
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <IonApp>
       <IonReactRouter>
+        <SkyLayer />
         <IonRouterOutlet>
           <Route path="/" element={<Home />} />
           <Route path="/dias" element={<NextDays />} />

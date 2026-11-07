@@ -84,7 +84,7 @@ export default function Cities() {
             : "Escribí al menos dos letras."}
       </p>
       {showing.length > 0 && (
-        <ul className="divide-y rounded-xl border bg-card" data-testid={term.length >= 2 ? "search-results" : "nearby"}>
+        <ul className="divide-y glass rounded-2xl" data-testid={term.length >= 2 ? "search-results" : "nearby"}>
           {showing.map((c) => {
             const added = savedKeys.has(coordKey(c.lat, c.lon));
             return (
@@ -105,7 +105,7 @@ export default function Cities() {
 
       <SectionTitle>Tus lugares</SectionTitle>
       {saved.length ? (
-        <ul className="divide-y rounded-xl border bg-card" data-testid="saved">
+        <ul className="divide-y glass rounded-2xl" data-testid="saved">
           {saved.map((p) => (
             <SavedRow key={p.id} p={p} />
           ))}

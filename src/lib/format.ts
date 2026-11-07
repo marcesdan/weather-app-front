@@ -46,3 +46,22 @@ export const BEAUFORT_NAME = [
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
 // Meteorological direction: where the wind (or swell) comes FROM.
 export const compass = (deg: number) => COMPASS[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
+
+type HourLike = { dt: number; temp: number; pop: number; wind_gust?: number; wind_speed: number };
+// One plain sentence about the next 24 h, built only from the forecast (OpenWeatherMap's own summary is English-only).
+export function nextDay(hours: HourLike[], tz: string, unit: WindUnit): string {
+  const next = hours.slice(1, 25);
+  if (!next.length) return "";
+  const peak = next.reduce((a, b) => (b.temp > a.temp ? b : a));
+  const low = next.reduce((a, b) => (b.temp < a.temp ? b : a));
+  const wet = next.find((h) => h.pop >= 0.4);
+  const gust = Math.max(...next.map((h) => h.wind_gust ?? h.wind_speed));
+  const parts = [
+    peak.temp - next[0].temp >= 1
+      ? `Sube a ${Math.round(peak.temp)}° a las ${fmtHour(peak.dt, tz)}`
+      : `Baja a ${Math.round(low.temp)}° a las ${fmtHour(low.dt, tz)}`,
+    wet ? `lluvia probable desde las ${fmtHour(wet.dt, tz)} (${pct(wet.pop)})` : "sin lluvia a la vista",
+    `ráfagas de hasta ${fmtWind(gust, unit)}`,
+  ];
+  return capitalize(parts.join(", ")) + ".";
+}

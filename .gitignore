@@ -35,3 +35,6 @@ dist
 test-results
 playwright-report
 .qa-shots
+
+# impeccable engine binary (per-OS): reinstall with `npx impeccable install`
+/.claude/skills/impeccable/scripts/bin/

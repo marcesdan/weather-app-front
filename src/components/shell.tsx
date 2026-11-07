@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // Ionic owns the page (transitions, safe areas, pull to refresh); the column inside is ours.
 export function Shell({ children, className, onRefresh }: { children: ReactNode; className?: string; onRefresh?: () => Promise<unknown> }) {
   return (
-    <IonPage>
+    <IonPage className="sky-page">
       <IonContent>
         {onRefresh && (
           <IonRefresher slot="fixed" onIonRefresh={(e) => void onRefresh().finally(() => e.detail.complete())}>
@@ -57,7 +57,7 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 
 export function Strip({ children, label }: { children: ReactNode; label: string }) {
   return (
-    <div role="list" aria-label={label} className="no-scrollbar -mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
+    <div role="list" aria-label={label} className="no-scrollbar flex snap-x gap-1 overflow-x-auto py-1">
       {children}
     </div>
   );

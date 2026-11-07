@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { beaufort, compass, fmtDate, fmtHour, fmtWind, pct } from "./format";
+import { beaufort, compass, fmtDate, fmtHour, fmtWind, nextDay, pct } from "./format";
 import { coordKey } from "./places";
 
 describe("format", () => {
@@ -32,5 +32,19 @@ describe("format", () => {
 
   it("places on the same spot share one weather key", () => {
     expect(coordKey(-34.6037, -58.3816)).toBe(coordKey(-34.6041, -58.3819));
+  });
+});
+
+describe("nextDay sentence", () => {
+  it("names the peak, the first likely rain and the strongest gust", () => {
+    const t = Date.UTC(2026, 10, 8, 12) / 1000;
+    const hours = Array.from({ length: 30 }, (_, i) => ({
+      dt: t + i * 3600,
+      temp: 10 + (i === 4 ? 8 : 0),
+      pop: i === 7 ? 0.6 : 0.1,
+      wind_speed: 5,
+      wind_gust: i === 9 ? 15 : 7,
+    }));
+    expect(nextDay(hours, "UTC", "kn")).toBe("Sube a 18° a las 16 h, lluvia probable desde las 19 h (60%), ráfagas de hasta 29 kn.");
   });
 });

@@ -4,6 +4,7 @@ import { ChevronRight, MapPin, Plus, Radar } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { HeaderRow, SectionTitle, Shell, Strip } from "@/components/shell";
 import { Hero, HourCell, PlaceCard } from "@/components/weather";
+import { skyHour, useSkyHour } from "@/components/sky";
 import { useHere, usePointForecast, useWeather } from "@/lib/queries";
 import { usePlaces, type Place } from "@/lib/places";
 import { fmtDate, type WindUnit } from "@/lib/format";
@@ -19,6 +20,7 @@ export default function Home() {
   const spot = here.data ?? (here.isError && saved[0] ? { ...saved[0], detail: saved[0].detail ?? "", source: "ip" as const } : undefined);
   const weather = useWeather(spot?.lat ?? 0, spot?.lon ?? 0, !!spot);
   const w = weather.data;
+  const hour = useSkyHour();
 
   // No GPS, no ip-api and nothing remembered: there is nothing to show.
   if (here.isError && !spot) return <Navigate to="/error" replace />;
@@ -34,8 +36,8 @@ export default function Home() {
       >
         {spot ? (
           <>
-            <h1 className="flex items-center justify-center gap-1.5 font-display font-semibold tracking-tight text-3xl leading-tight" data-testid="here-name">
-              <MapPin aria-hidden className="size-5 shrink-0 text-primary-ink" />
+            <h1 className="flex items-center justify-center gap-1.5 text-3xl leading-tight font-semibold tracking-tight" data-testid="here-name">
+              <MapPin aria-hidden className="size-5 shrink-0" />
               <span className="truncate">{spot.name}</span>
             </h1>
             <p className="text-sm text-muted-foreground">{w ? fmtDate(w.current.dt, w.timezone) : spot.detail || " "}</p>
@@ -46,11 +48,11 @@ export default function Home() {
       </HeaderRow>
 
       {w ? (
-        <Hero w={w} unit={unit} />
+        <Hero w={w} unit={unit} hour={hour} onNow={() => skyHour.set(null)} />
       ) : weather.isError ? (
         <Retry onRetry={() => weather.refetch()} />
       ) : (
-        <div className="mt-2 h-64 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" aria-label="Cargando el clima" />
+        <div className="mx-auto mt-6 h-56 max-w-sm animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" aria-label="Cargando el clima" />
       )}
 
       <SectionTitle
@@ -63,13 +65,15 @@ export default function Home() {
         Próximas horas
       </SectionTitle>
       {w ? (
-        <Strip label="Próximas horas">
-          {w.hourly.slice(1, 25).map((h) => (
-            <HourCell key={h.dt} h={h} tz={w.timezone} />
-          ))}
-        </Strip>
+        <div className="glass rounded-2xl px-2 py-1">
+          <Strip label="Próximas horas">
+            {w.hourly.slice(1, 25).map((h, i) => (
+              <HourCell key={h.dt} h={h} tz={w.timezone} selected={hour === i + 1} onPick={() => skyHour.set(hour === i + 1 ? null : i + 1)} />
+            ))}
+          </Strip>
+        </div>
       ) : (
-        <div className="h-28 animate-pulse rounded-lg bg-muted motion-reduce:animate-none" />
+        <div className="h-28 animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" />
       )}
 
       <OtherPlaces unit={unit} />
@@ -97,7 +101,7 @@ function OtherPlaces({ unit }: { unit: WindUnit }) {
           ))}
         </Strip>
       ) : (
-        <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="glass rounded-2xl px-4 py-6 text-center text-sm">
           Agregá ciudades o zonas del mapa para ver su clima acá y recibir avisos.
         </p>
       )}
@@ -122,7 +126,7 @@ function SavedPlace({ p, unit }: { p: Place; unit: WindUnit }) {
 
 function Retry({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="mt-2 rounded-xl border px-5 py-8 text-center">
+    <div className="glass mt-6 rounded-2xl px-5 py-8 text-center">
       <p>No pudimos traer el clima. El servidor puede tardar un minuto en despertar.</p>
       <Button className="mt-4" variant="outline" onClick={onRetry}>
         Reintentar

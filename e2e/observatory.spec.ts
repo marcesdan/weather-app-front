@@ -57,6 +57,6 @@ test("going back from the observatory leaves no errors (Ionic keeps the page cac
   // Coming back to the cached page resumes drawing at full size.
   await page.getByRole("link", { name: "Observatorio" }).click();
   await expect(page.getByTestId("map")).toBeVisible();
-  await expect.poll(() => page.locator("canvas").first().evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
+  await expect.poll(() => page.getByTestId("map").locator("..").locator("canvas").first().evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });

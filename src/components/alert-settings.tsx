@@ -21,7 +21,7 @@ export function AlertSettings() {
   return (
     <>
       <SectionTitle>Avisos</SectionTitle>
-      <div className="rounded-xl border bg-card p-4">
+      <div className="glass rounded-2xl p-4">
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="alerts" className="flex-col items-start gap-1">
             <span className="text-base">Avisarme de alertas en mis lugares</span>

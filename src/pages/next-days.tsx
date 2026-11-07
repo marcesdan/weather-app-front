@@ -24,7 +24,7 @@ export default function NextDays() {
       {!w ? (
         <div className="mt-4 h-96 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
       ) : (
-        <ol className="mt-4 divide-y rounded-xl border bg-card" data-testid="days">
+        <ol className="mt-4 divide-y glass rounded-2xl" data-testid="days">
           {days.map((d) => {
             const cond = d.weather[0];
             return (

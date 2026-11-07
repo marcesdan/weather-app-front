@@ -40,3 +40,25 @@ test.describe("without GPS", () => {
     await expect(page.getByTestId("here-name")).toHaveText("Rosario");
   });
 });
+
+test.describe("the sky", () => {
+  test.use({ geolocation: AT_SEA, permissions: ["geolocation"] });
+
+  test("picking an hour shows that hour over its own sky; Ahora returns", { tag: "@smoke" }, async ({ page, errors }) => {
+    await mockNetwork(page);
+    await page.goto("/");
+    await expect.poll(() => page.getByTestId("sky").evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
+    const hours = page.getByRole("list", { name: "Próximas horas" }).getByRole("button");
+    await hours.nth(2).click();
+    await expect(hours.nth(2)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("region", { name: /Pronóstico a las/ })).toBeVisible();
+    await page.getByRole("button", { name: /ahora/ }).click();
+    await expect(page.getByRole("region", { name: "Ahora" })).toBeVisible();
+    // The sky is hidden on the observatory and comes back at full size.
+    await page.getByRole("link", { name: "Observatorio" }).click();
+    await expect(page.getByTestId("map")).toBeVisible();
+    await page.getByRole("link", { name: "Volver" }).last().click();
+    await expect.poll(() => page.getByTestId("sky").evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+  });
+});
