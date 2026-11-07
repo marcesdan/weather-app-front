@@ -60,4 +60,17 @@ export const searchCities = (city: string) => get<Geocoding[]>("geo/direct", { c
 export const reverseGeocode = (lat: number, lon: number) => get<Geocoding[]>("geo/reverse", { lat, lon });
 export const fetchIpLocation = () => get<IpApi>("ip-api", {});
 
+// v2 (same backend): air quality and OpenWeatherMap map tiles proxied with the key kept server-side.
+export const API_V2 = base.replace(/\/v1\/?$/, "/v2");
+export type Air = {
+  current: { dt: number; main: { aqi: number }; components: Record<string, number> } | null;
+  forecast: { dt: number; aqi: number; pm2_5: number }[];
+};
+export async function fetchAir(lat: number, lon: number): Promise<Air> {
+  const res = await fetch(`${API_V2}/air?${new URLSearchParams({ lat: String(lat), lon: String(lon) })}`);
+  if (!res.ok) throw new Error(`air ${res.status}`);
+  return res.json() as Promise<Air>;
+}
+export const tileUrl = (layer: "clouds_new" | "precipitation_new") => `${API_V2}/tiles/${layer}/{z}/{x}/{y}.png`;
+
 export const placeName = (g: Pick<Geocoding, "name" | "local_names">) => g.local_names?.es ?? g.name;

@@ -14,6 +14,10 @@ test.describe("with GPS at sea", () => {
     const hours = page.getByRole("list", { name: "Próximas horas" }).getByRole("listitem");
     await expect(hours).toHaveCount(24);
     await expect(hours.first()).toContainText("60%"); // v1 floored pop and always showed 0%
+    const air = page.getByTestId("air");
+    await expect(air).toContainText("Aceptable");
+    await expect(air).toContainText("PM2.5 8 µg/m³");
+    await expect(air).toContainText(/Mala desde las \d+ h/);
     expect(errors).toEqual([]);
   });
 

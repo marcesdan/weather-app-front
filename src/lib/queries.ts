@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchIpLocation, fetchOneCall, placeName, reverseGeocode } from "./api";
+import { fetchAir, fetchIpLocation, fetchOneCall, placeName, reverseGeocode } from "./api";
 import { fetchPoint } from "./openmeteo";
 import { coordKey } from "./places";
 
@@ -21,6 +21,15 @@ export const usePointForecast = (lat: number, lon: number, enabled = true) =>
     queryFn: () => fetchPoint({ lat, lon }),
     staleTime: 30 * 60_000,
     enabled,
+  });
+
+export const useAir = (lat?: number, lon?: number) =>
+  useQuery({
+    queryKey: ["air", lat != null && lon != null ? coordKey(lat, lon) : null],
+    queryFn: () => fetchAir(lat!, lon!),
+    enabled: lat != null && lon != null,
+    staleTime: 30 * 60_000,
+    refetchInterval: 30 * 60_000,
   });
 
 export type Here = { name: string; lat: number; lon: number; detail: string; source: "gps" | "ip" };

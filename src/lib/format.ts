@@ -65,3 +65,6 @@ export function nextDay(hours: HourLike[], tz: string, unit: WindUnit): string {
   ];
   return capitalize(parts.join(", ")) + ".";
 }
+
+// OpenWeatherMap's air quality index, 1 (good) to 5 (very poor).
+export const AQI = ["", "Buena", "Aceptable", "Moderada", "Mala", "Muy mala"] as const;

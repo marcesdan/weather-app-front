@@ -15,10 +15,16 @@ import { fetchAtmo, fetchSea, grid, HOURS, type PointForecast } from "@/lib/open
 import { beaufort, BEAUFORT_NAME, compass, fmtHour, fmtWeekday, fromMs, UNIT_LABEL, type WindUnit } from "@/lib/format";
 import { evaluate } from "@/lib/alerts";
 import { formatCoords, places } from "@/lib/places";
-import { placeName, reverseGeocode } from "@/lib/api";
+import { placeName, reverseGeocode, tileUrl } from "@/lib/api";
 import { useHere, usePointForecast } from "@/lib/queries";
 import { usePref } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
+
+// Live OpenWeatherMap layers (now only, not tied to the hour slider), alongside our own forecast layers.
+const LIVE = { radar: { label: "Radar ahora", layer: "precipitation_new" }, clouds: { label: "Nubes ahora", layer: "clouds_new" } } as const;
+type Live = keyof typeof LIVE;
+type View = Layer | Live;
+const isLive = (v: View): v is Live => v in LIVE;
 
 const ROWS = 8;
 const COLS = 8;
@@ -36,7 +42,7 @@ export default function Observatory() {
   }, []);
 
   const [unit, setUnit] = usePref<WindUnit>("unit", "kn");
-  const [layer, setLayer] = useState<Layer>("wind");
+  const [layer, setLayer] = useState<View>("wind");
   const [hour, setHour] = useState(0);
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
   const [picked, setPicked] = useState<{ lat: number; lon: number } | null>(params.has("lat") ? start : null);
@@ -83,7 +89,7 @@ export default function Observatory() {
           <MapView start={start} field={field.data ?? null} layer={layer} hour={hour} picked={picked} onBounds={setBounds} onPick={setPicked} />
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] flex flex-wrap gap-1.5 p-2">
             <div role="radiogroup" aria-label="Capa" className="pointer-events-auto flex gap-1 rounded-lg border bg-background/90 p-1 shadow-sm">
-              {(Object.keys(LAYERS) as Layer[]).map((l) => (
+              {([...Object.keys(LAYERS), ...Object.keys(LIVE)] as View[]).map((l) => (
                 <button
                   key={l}
                   role="radio"
@@ -92,12 +98,18 @@ export default function Observatory() {
                   onClick={() => setLayer(l)}
                   className={cn("rounded-md px-2.5 py-1 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50", layer === l ? "bg-primary text-primary-foreground" : "hover:bg-accent")}
                 >
-                  {LAYERS[l].label}
+                  {isLive(l) ? LIVE[l].label : LAYERS[l].label}
                 </button>
               ))}
             </div>
           </div>
-          <Legend layer={layer} />
+          {isLive(layer) ? (
+            <p className="pointer-events-none absolute bottom-2 left-2 z-[500] rounded-md border bg-background/90 px-2 py-1.5 text-xs">
+              En vivo, de OpenWeatherMap. No sigue el horario.
+            </p>
+          ) : (
+            <Legend layer={layer} />
+          )}
           {field.isError && (
             <p className="absolute inset-x-2 bottom-14 z-[500] rounded-md bg-background/95 p-2 text-center text-sm">
               No pudimos cargar el pronóstico del mapa. Mové el mapa para reintentar.
@@ -147,7 +159,7 @@ function MapView({
 }: {
   start: { lat: number; lon: number };
   field: Field | null;
-  layer: Layer;
+  layer: View;
   hour: number;
   picked: { lat: number; lon: number } | null;
   onBounds: (b: [number, number, number, number]) => void;
@@ -186,7 +198,7 @@ function MapView({
     };
     const redraw = () => {
       const { field: f, layer: l, hour: h } = live.current;
-      if (f) drawHeat(heat.current!.getContext("2d")!, map, f, l, h);
+      if (f && !isLive(l)) drawHeat(heat.current!.getContext("2d")!, map, f, l, h);
       particles.current?.restart();
     };
     size();
@@ -225,9 +237,23 @@ function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !field) return;
-    drawHeat(heat.current!.getContext("2d")!, map, field, layer, hour);
+    const ctx = heat.current!.getContext("2d")!;
+    if (isLive(layer)) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    else drawHeat(ctx, map, field, layer, hour);
     particles.current?.restart();
   }, [field, layer, hour]);
+
+  // Live tiles sit above the base map and under our wind particles.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isLive(layer)) return;
+    const tiles = L.tileLayer(tileUrl(LIVE[layer].layer), {
+      opacity: 0.85,
+      maxNativeZoom: 12,
+      attribution: "Capas &copy; OpenWeatherMap",
+    }).addTo(map);
+    return () => void tiles.remove();
+  }, [layer]);
 
   useEffect(() => {
     const map = mapRef.current;

@@ -57,6 +57,20 @@ export async function mockNetwork(page: Page, { reverse = [] }: Partial<Mock> = 
       });
     return route.fulfill({ status: 404, json: {} });
   });
+  await page.route("http://api.test/api/v2/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.startsWith("/api/v2/tiles/")) return route.fulfill({ body: PNG_1PX, contentType: "image/png" });
+    if (path === "/api/v2/air") {
+      const t0 = Math.floor(Date.now() / 1000);
+      return route.fulfill({
+        json: {
+          current: { dt: t0, main: { aqi: 2 }, components: { pm2_5: 8.4 } },
+          forecast: Array.from({ length: 24 }, (_, i) => ({ dt: t0 + i * 3600, aqi: i === 6 ? 4 : 2, pm2_5: 9 })),
+        },
+      });
+    }
+    return route.fulfill({ status: 404, json: {} });
+  });
   await page.route(/open-meteo\.com/, (route) => route.fulfill({ json: openMeteo(new URL(route.request().url())) }));
   await page.route(/overpass-api\.de/, (route) =>
     route.fulfill({

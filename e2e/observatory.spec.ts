@@ -12,6 +12,13 @@ test("observatory: layers, time slider, point forecast and a named zone", { tag:
   await expect(page.getByTestId("layer-waves")).toHaveAttribute("aria-checked", "true");
   await expect(page.getByText("5+ m")).toBeVisible();
 
+  // Live OpenWeatherMap radar: tiles come from our backend (key stays server-side).
+  const tile = page.waitForRequest(/\/api\/v2\/tiles\/precipitation_new\/\d+\/\d+\/\d+\.png/);
+  await page.getByTestId("layer-radar").click();
+  await tile;
+  await expect(page.getByText("En vivo, de OpenWeatherMap")).toBeVisible();
+  await page.getByTestId("layer-waves").click();
+
   await page.getByRole("slider", { name: "Pronóstico" }).fill("6");
   await expect(page.getByTestId("hour-label")).toContainText("(+6 h)");
 

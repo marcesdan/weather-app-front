@@ -5,7 +5,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { HeaderRow, SectionTitle, Shell, Strip } from "@/components/shell";
 import { Hero, HourCell, PlaceCard } from "@/components/weather";
 import { skyHour, useSkyHour } from "@/components/sky";
-import { useHere, usePointForecast, useWeather } from "@/lib/queries";
+import { useAir, useHere, usePointForecast, useWeather } from "@/lib/queries";
+import { AirCard } from "@/components/air";
 import { usePlaces, type Place } from "@/lib/places";
 import { fmtDate, type WindUnit } from "@/lib/format";
 import { usePref } from "@/lib/prefs";
@@ -21,6 +22,7 @@ export default function Home() {
   const weather = useWeather(spot?.lat ?? 0, spot?.lon ?? 0, !!spot);
   const w = weather.data;
   const hour = useSkyHour();
+  const air = useAir(spot?.lat, spot?.lon).data;
 
   // No GPS, no ip-api and nothing remembered: there is nothing to show.
   if (here.isError && !spot) return <Navigate to="/error" replace />;
@@ -75,6 +77,8 @@ export default function Home() {
       ) : (
         <div className="h-28 animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" />
       )}
+
+      {w && air && <AirCard air={air} tz={w.timezone} />}
 
       <OtherPlaces unit={unit} />
     </Shell>
