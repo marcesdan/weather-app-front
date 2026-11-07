@@ -71,6 +71,12 @@ export async function fetchAir(lat: number, lon: number): Promise<Air> {
   if (!res.ok) throw new Error(`air ${res.status}`);
   return res.json() as Promise<Air>;
 }
+// Next 60 minutes, minute by minute (OpenWeatherMap One Call 4.0). Empty where OpenWeatherMap has no nowcast (Argentina).
+export async function fetchNowcast(lat: number, lon: number): Promise<{ dt: number; precipitation: number }[]> {
+  const res = await fetch(`${API_V2}/nowcast?${new URLSearchParams({ lat: String(lat), lon: String(lon) })}`);
+  if (!res.ok) return [];
+  return ((await res.json()) as { data: { dt: number; precipitation: number }[] }).data;
+}
 export const tileUrl = (layer: "clouds_new" | "precipitation_new") => `${API_V2}/tiles/${layer}/{z}/{x}/{y}.png`;
 
 export const placeName = (g: Pick<Geocoding, "name" | "local_names">) => g.local_names?.es ?? g.name;

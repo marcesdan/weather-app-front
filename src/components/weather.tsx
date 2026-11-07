@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Droplets, Navigation2, Umbrella, Undo2 } from "lucide-react";
-import type { OneCall } from "@/lib/api";
-import { capitalize, compass, fmtHour, fmtWind, nextDay, pct, type WindUnit } from "@/lib/format";
+import type { Air, OneCall } from "@/lib/api";
+import { AirFact } from "./air";
+import { capitalize, compass, deg, fmtHour, fmtWind, nextDay, pct, type Units } from "@/lib/format";
 import type { Alert } from "@/lib/alerts";
 import { ConditionIcon } from "./condition-icon";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ export function WindArrow({ deg, className }: { deg: number; className?: string 
 }
 
 // The reading sits on the sky itself, no card: the sky behind it is the picture of this same state.
-export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: WindUnit; hour: number | null; onNow: () => void }) {
+export function Hero({ w, unit, hour, onNow, air }: { w: OneCall; unit: Units; hour: number | null; onNow: () => void; air?: Air }) {
   const h = hour == null ? null : w.hourly[hour];
   const s = h ?? w.current;
   const cond = s.weather[0];
@@ -34,16 +35,24 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: WindUnit; hou
         )}
       </div>
       <p className="mt-3 text-[6.5rem] leading-[0.9] font-extralight tracking-[-0.04em] tabular-nums" data-testid="current-temp">
-        {Math.round(s.temp)}°
+        {deg(s.temp, unit)}
       </p>
       <p className="mt-2 text-xl font-medium">{capitalize(cond?.description ?? "")}</p>
       <p className="text-base text-muted-foreground tabular-nums">
-        Máx {Math.round(today.temp.max)}° · Mín {Math.round(today.temp.min)}° · Sensación {Math.round(s.feels_like)}°
+        Máx {deg(today.temp.max, unit)} · Mín {deg(today.temp.min, unit)} · Sensación {deg(s.feels_like, unit)}
       </p>
-      <dl className="glass mx-auto mt-5 grid max-w-sm grid-cols-3 divide-x divide-border rounded-2xl py-2.5 text-sm">
+      <dl className={cn("glass mx-auto mt-5 grid max-w-md divide-x divide-border rounded-2xl py-2.5 text-sm", air?.current ? "grid-cols-4" : "grid-cols-3")}>
         <Fact icon={<Umbrella className="size-4" />} label="Lluvia" value={pct(h ? h.pop : (w.hourly[0]?.pop ?? 0))} />
         <Fact icon={<Droplets className="size-4" />} label="Humedad" value={`${s.humidity}%`} />
-        <Fact icon={<WindArrow deg={s.wind_deg} className="size-4" />} label={`Viento ${compass(s.wind_deg)}`} value={fmtWind(s.wind_speed, unit)} />
+        <Fact icon={<WindArrow deg={s.wind_deg} className="size-4" />} label={`Viento ${compass(s.wind_deg)}`} value={fmtWind(s.wind_speed, unit.wind)} />
+        {air?.current && (
+          <div>
+            <dt className="sr-only">Calidad del aire</dt>
+            <dd>
+              <AirFact air={air} tz={w.timezone} />
+            </dd>
+          </div>
+        )}
       </dl>
       {/* Stays in the layout while an hour is picked, so the strip below never jumps. */}
       <p className={cn("mx-auto mt-4 max-w-sm text-sm text-pretty transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
@@ -66,13 +75,13 @@ function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; va
 }
 
 // An hour is a button: picking it turns the sky (and the reading above) into that hour.
-export function HourCell({ h, tz, selected, onPick }: { h: OneCall["hourly"][number]; tz: string; selected: boolean; onPick: () => void }) {
+export function HourCell({ h, tz, selected, onPick, unit }: { h: OneCall["hourly"][number]; tz: string; selected: boolean; onPick: () => void; unit: Units }) {
   const cond = h.weather[0];
   return (
     <div role="listitem" className="shrink-0 snap-start">
     <button
       aria-pressed={selected}
-      aria-label={`${fmtHour(h.dt, tz)}: ${Math.round(h.temp)}°, ${cond?.description}, lluvia ${pct(h.pop)}`}
+      aria-label={`${fmtHour(h.dt, tz)}: ${deg(h.temp, unit)}, ${cond?.description}, lluvia ${pct(h.pop)}`}
       onClick={onPick}
       className={cn(
         "flex w-14 flex-col items-center gap-1.5 rounded-xl py-2.5 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
@@ -81,7 +90,7 @@ export function HourCell({ h, tz, selected, onPick }: { h: OneCall["hourly"][num
     >
       <span className={cn("text-sm tabular-nums", selected ? "" : "text-muted-foreground")}>{fmtHour(h.dt, tz)}</span>
       <ConditionIcon code={cond?.icon} className="size-7" />
-      <span className="font-semibold tabular-nums">{Math.round(h.temp)}°</span>
+      <span className="font-semibold tabular-nums">{deg(h.temp, unit)}</span>
       <span className={cn("text-xs tabular-nums", h.pop >= 0.3 ? (selected ? "" : "text-[oklch(0.86_0.09_235)]") : "opacity-0")}>{pct(h.pop)}</span>
     </button>
     </div>
@@ -99,7 +108,7 @@ export function PlaceCard({
   name: string;
   w?: OneCall;
   failed?: boolean;
-  unit: WindUnit;
+  unit: Units;
   alerts?: Alert[];
   to: string;
 }) {
@@ -117,12 +126,12 @@ export function PlaceCard({
       {w ? (
         <>
           <span className="flex items-center justify-between">
-            <span className="text-4xl font-light tabular-nums">{Math.round(w.current.temp)}°</span>
+            <span className="text-4xl font-light tabular-nums">{deg(w.current.temp, unit)}</span>
             <ConditionIcon code={cond?.icon} label={cond?.description} className="size-10" />
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
             <WindArrow deg={w.current.wind_deg} />
-            {fmtWind(w.current.wind_speed, unit)} · {pct(w.hourly[0]?.pop ?? 0)} lluvia
+            {fmtWind(w.current.wind_speed, unit.wind)} · {pct(w.hourly[0]?.pop ?? 0)} lluvia
           </span>
           {alerts?.[0] && (
             <span className="rounded-md bg-[oklch(0.8_0.15_75/0.3)] px-2 py-1 text-xs" data-testid="place-alert">

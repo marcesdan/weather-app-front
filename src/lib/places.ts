@@ -8,6 +8,7 @@ export type Place = {
   lon: number;
   detail?: string; // "Buenos Aires, AR" for cities, coordinates for zones
   kind: "city" | "zone";
+  alerts?: boolean; // notify for this place only (chosen per place in Ciudades)
 };
 
 const KEY = "weather.places";
@@ -60,6 +61,9 @@ export const places = {
   },
   remove(id: string) {
     write(read().filter((p) => p.id !== id));
+  },
+  setAlerts(id: string, on: boolean) {
+    write(read().map((p) => (p.id === id ? { ...p, alerts: on } : p)));
   },
   rename(id: string, name: string) {
     write(read().map((p) => (p.id === id ? { ...p, name } : p)));

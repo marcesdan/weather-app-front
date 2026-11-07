@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { beaufort, compass, fmtDate, fmtHour, fmtWind, nextDay, pct } from "./format";
+import { beaufort, compass, fmtDate, fmtHour, fmtWind, nextDay, pct, rainSoon } from "./format";
 import { coordKey } from "./places";
 
 describe("format", () => {
@@ -45,6 +45,16 @@ describe("nextDay sentence", () => {
       wind_speed: 5,
       wind_gust: i === 9 ? 15 : 7,
     }));
-    expect(nextDay(hours, "UTC", "kn")).toBe("Sube a 18° a las 16 h, lluvia probable desde las 19 h (60%), ráfagas de hasta 29 kn.");
+    expect(nextDay(hours, "UTC", { wind: "kn", temp: "c" })).toBe("Sube a 18° a las 16 h, lluvia probable desde las 19 h (60%), ráfagas de hasta 29 kn.");
+  });
+});
+
+describe("rain soon", () => {
+  const now = 1_800_000_000;
+  const at = (min: number, mm: number) => ({ dt: now + min * 60, precipitation: mm });
+  it("says when it starts, when it stops, or nothing when dry", () => {
+    expect(rainSoon([at(0, 0), at(5, 0), at(12, 0.8)], now)).toBe("Llueve en 12 min");
+    expect(rainSoon([at(0, 1.2), at(15, 0.5), at(30, 0)], now)).toBe("Llueve ahora, para en unos 30 min");
+    expect(rainSoon([at(0, 0), at(15, 0.05)], now)).toBeNull();
   });
 });

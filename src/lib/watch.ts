@@ -22,7 +22,7 @@ export async function runCheck(show: Show): Promise<number> {
   const sent = new Set(await readJson<string[]>(cache, "/state/sent.json", []));
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   let shown = 0;
-  for (const p of list) {
+  for (const p of list.filter((x) => x.alerts)) {
     const fc = await fetchPoint(p).catch(() => null);
     if (!fc) continue;
     for (const a of evaluate(fc)) {

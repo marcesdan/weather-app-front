@@ -10,7 +10,7 @@ test("observatory: layers, time slider, point forecast and a named zone", { tag:
   await expect(page.getByTestId("hour-label")).toContainText("(ahora)");
   await page.getByTestId("layer-waves").click();
   await expect(page.getByTestId("layer-waves")).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText("5+ m")).toBeVisible();
+  await expect(page.getByText("6 m+")).toBeVisible();
 
   // Live OpenWeatherMap radar: tiles come from our backend (key stays server-side).
   const tile = page.waitForRequest(/\/api\/v2\/tiles\/precipitation_new\/\d+\/\d+\/\d+\.png/);

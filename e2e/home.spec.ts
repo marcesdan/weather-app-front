@@ -1,4 +1,4 @@
-import { AT_SEA, expect, mockNetwork, test } from "./fixtures";
+import { AT_SEA, expect, mockNetwork, ONECALL, screen, test } from "./fixtures";
 
 test.describe("with GPS at sea", () => {
   test.use({ geolocation: AT_SEA, permissions: ["geolocation"] });
@@ -14,10 +14,15 @@ test.describe("with GPS at sea", () => {
     const hours = page.getByRole("list", { name: "Próximas horas" }).getByRole("listitem");
     await expect(hours).toHaveCount(24);
     await expect(hours.first()).toContainText("60%"); // v1 floored pop and always showed 0%
+    // No minute nowcast here (empty, like Argentina): Open-Meteo's 15-minute steps fill in.
+    await expect(page.getByTestId("rain-soon")).toContainText(/Llueve en \d+ min/);
+    // Air quality is one more fact; the details open on tap.
     const air = page.getByTestId("air");
     await expect(air).toContainText("Aceptable");
-    await expect(air).toContainText("PM2.5 8 µg/m³");
-    await expect(air).toContainText(/Mala desde las \d+ h/);
+    await air.click();
+    const detail = page.getByTestId("air-detail");
+    await expect(detail).toContainText("PM2.5 8 µg/m³");
+    await expect(detail).toContainText(/Mala desde las \d+ h/);
     expect(errors).toEqual([]);
   });
 
@@ -64,5 +69,20 @@ test.describe("the sky", () => {
     await page.getByRole("link", { name: "Volver" }).last().click();
     await expect.poll(() => page.getByTestId("sky").evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
     expect(errors).toEqual([]);
+  });
+});
+
+test.describe("settings", () => {
+  test.use({ geolocation: AT_SEA, permissions: ["geolocation"] });
+
+  test("units chosen in Ajustes apply everywhere", async ({ page }) => {
+    await mockNetwork(page);
+    await page.goto("/");
+    await page.getByRole("link", { name: "Ajustes" }).click();
+    await page.getByRole("button", { name: "°F" }).click();
+    await page.getByRole("button", { name: "kn" }).click();
+    await screen(page).getByRole("link", { name: "Volver" }).click();
+    await expect(screen(page).getByTestId("current-temp")).toHaveText(`${Math.round((ONECALL.current.temp * 9) / 5 + 32)}°`);
+    await expect(screen(page).getByRole("region", { name: "Ahora" })).toContainText(" kn");
   });
 });

@@ -14,21 +14,57 @@ export type Field = {
 
 export type Layer = "wind" | "waves" | "storm" | "rain";
 
-// Value per layer and the top of its color scale; colors run the Astropia amber ramp (chart-1 → chart-5) then danger red.
-export const LAYERS: Record<Layer, { label: string; unit: string; max: number; get: (f: Field, i: number, hour: number) => number | null }> = {
-  wind: { label: "Viento", unit: "kn", max: 40, get: (f, i, h) => kn(f.atmo[i]?.wind_speed_10m?.[h]) },
-  waves: { label: "Olas", unit: "m", max: 5, get: (f, i, h) => f.sea[i]?.wave_height?.[h] ?? null },
-  storm: { label: "Tormenta", unit: "J/kg", max: 2500, get: (f, i, h) => f.atmo[i]?.cape?.[h] ?? null },
-  rain: { label: "Lluvia", unit: "mm/h", max: 15, get: (f, i, h) => f.atmo[i]?.precipitation?.[h] ?? null },
+type Stop = [t: number, r: number, g: number, b: number];
+type Spec = { label: string; unit: string; max: number; stops: Stop[]; floor: number; get: (f: Field, i: number, hour: number) => number | null };
+
+// Each quantity keeps its field's own conventional scale (not the UI theme): wind like Windy's, rain like a radar,
+// waves blue to red, convective energy yellow to magenta. Interpolated continuously; `floor` is the alpha of a zero.
+export const LAYERS: Record<Layer, Spec> = {
+  wind: {
+    label: "Viento",
+    unit: "kn",
+    max: 45,
+    floor: 0.16,
+    stops: [[0, 50, 90, 160], [0.15, 40, 140, 170], [0.3, 60, 175, 95], [0.48, 225, 210, 60], [0.66, 240, 140, 40], [0.83, 215, 50, 45], [1, 165, 40, 150]],
+    get: (f, i, h) => kn(f.atmo[i]?.wind_speed_10m?.[h]),
+  },
+  waves: {
+    label: "Olas",
+    unit: "m",
+    max: 6,
+    floor: 0.18,
+    stops: [[0, 40, 80, 150], [0.2, 40, 140, 195], [0.4, 70, 195, 175], [0.6, 240, 215, 90], [0.8, 240, 120, 60], [1, 185, 40, 95]],
+    get: (f, i, h) => f.sea[i]?.wave_height?.[h] ?? null,
+  },
+  storm: {
+    label: "Tormenta",
+    unit: "J/kg",
+    max: 3000,
+    floor: 0,
+    stops: [[0, 200, 220, 110], [0.25, 240, 205, 60], [0.5, 240, 120, 40], [0.75, 205, 40, 45], [1, 160, 30, 130]],
+    get: (f, i, h) => f.atmo[i]?.cape?.[h] ?? null,
+  },
+  rain: {
+    label: "Lluvia",
+    unit: "mm/h",
+    max: 15,
+    floor: 0,
+    stops: [[0, 150, 205, 245], [0.1, 60, 140, 225], [0.3, 40, 180, 90], [0.55, 240, 220, 60], [0.8, 240, 120, 40], [1, 200, 40, 60]],
+    get: (f, i, h) => f.atmo[i]?.precipitation?.[h] ?? null,
+  },
 };
 const kn = (ms: number | null | undefined) => (ms == null ? null : ms * 1.943844);
 
-const RAMP = ["0.88 0.15 92", "0.77 0.16 70", "0.67 0.16 58", "0.56 0.15 49", "0.47 0.12 46", "0.55 0.22 27"];
-export const rampColor = (t: number, alpha: number) => {
-  const i = Math.max(0, Math.min(RAMP.length - 1, Math.round(t * (RAMP.length - 1))));
-  return `oklch(${RAMP[i]} / ${alpha})`;
-};
-export const RAMP_CSS = `linear-gradient(to right, ${RAMP.map((c) => `oklch(${c})`).join(", ")})`;
+export function scaleColor(spec: Spec, t: number, alpha: number) {
+  const s = spec.stops;
+  let k = 1;
+  while (k < s.length - 1 && t > s[k][0]) k++;
+  const [t0, r0, g0, b0] = s[k - 1];
+  const [t1, r1, g1, b1] = s[k];
+  const u = Math.max(0, Math.min(1, (t - t0) / (t1 - t0 || 1)));
+  return `rgb(${Math.round(r0 + (r1 - r0) * u)} ${Math.round(g0 + (g1 - g0) * u)} ${Math.round(b0 + (b1 - b0) * u)} / ${alpha})`;
+}
+export const legendCss = (spec: Spec) => `linear-gradient(to right, ${spec.stops.map(([t, r, g, b]) => `rgb(${r} ${g} ${b}) ${t * 100}%`).join(", ")})`;
 
 // Fractional grid row/col for a lat/lon inside the field.
 const frac = (f: Field, lat: number, lon: number) => [
@@ -83,9 +119,12 @@ export function drawHeat(ctx: CanvasRenderingContext2D, map: LeafletMap, f: Fiel
       const [fr, fc] = frac(f, ll.lat, ll.lng);
       if (fr < 0 || fc < 0 || fr > f.rows - 1 || fc > f.cols - 1) continue;
       const v = sample(values, f.rows, f.cols, fr, fc);
-      if (v == null || v <= 0) continue;
-      const t = Math.min(1, v / spec.max);
-      lc.fillStyle = rampColor(t, 0.06 + t * 0.5); // calm stays clear so the map reads; strong values stand out
+      if (v == null || (spec.floor === 0 && v <= 0)) continue; // no rain, no storm energy: leave the map clear
+      const t = Math.min(1, Math.max(0, v) / spec.max);
+      // Fade out over the last half cell of the data grid: no hard rectangle where the forecast ends.
+      const edge = Math.min(fr, fc, f.rows - 1 - fr, f.cols - 1 - fc);
+      const fade = Math.min(1, edge / 0.5);
+      lc.fillStyle = scaleColor(spec, t, (spec.floor + t * 0.42) * fade);
       lc.fillRect(x, y, 1, 1);
     }
   ctx.clearRect(0, 0, width, height);

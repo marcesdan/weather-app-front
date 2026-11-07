@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { startSky, type SkyHandle } from "./sky-gl";
 import { skyAt, skyFrom, type Sky } from "@/lib/sky";
 import { useHere, useWeather } from "@/lib/queries";
+import { usePlaces } from "@/lib/places";
 
 // The hour picked in the home strip (index into hourly), shared with the sky behind every page.
 let picked: number | null = null;
@@ -28,9 +29,13 @@ export function SkyLayer() {
   const handle = useRef<SkyHandle>(null);
   const { pathname } = useLocation();
   const here = useHere().data;
-  const { data: w } = useWeather(here?.lat ?? 0, here?.lon ?? 0, !!here);
+  const placeId = pathname.match(/^\/lugar\/([^/]+)/)?.[1];
+  const place = usePlaces().find((p) => p.id === placeId);
+  const spot = place ?? here; // the sky shows the place on screen
+  const { data: w } = useWeather(spot?.lat ?? 0, spot?.lon ?? 0, !!spot);
   const hour = useSkyHour();
-  let target = w ? skyAt(w, pathname === "/" ? hour : null) : WAITING;
+  const onHome = pathname === "/" || !!place;
+  let target = w ? skyAt(w, onHome ? hour : null) : WAITING;
   // Dev-only QA preview of any OpenWeatherMap state: /?sky=502&night=1&wind=12 (removed from production builds).
   if (import.meta.env.DEV && w) {
     const q = new URLSearchParams(location.search);
@@ -40,6 +45,9 @@ export function SkyLayer() {
       target = skyFrom(w, at, { weather: [{ id, main: "", description: "", icon: "" }], clouds: Number(q.get("clouds") ?? 60), wind_deg: 270, wind_speed: Number(q.get("wind") ?? 6) });
     }
   }
+
+  // A picked hour belongs to the screen it was picked on.
+  useEffect(() => skyHour.set(null), [pathname]);
 
   useEffect(() => {
     handle.current = startSky(canvas.current!, WAITING);

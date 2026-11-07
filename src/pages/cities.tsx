@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Pencil, Plus, Search, X } from "lucide-react";
+import { Bell, BellOff, Check, Pencil, Plus, Search, X } from "lucide-react";
 import { HeaderRow, SectionTitle, Shell } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { placeName, searchCities } from "@/lib/api";
 import { coordKey, places, usePlaces, type Place } from "@/lib/places";
 import { useHere, useNearby } from "@/lib/queries";
-import { AlertSettings } from "@/components/alert-settings";
+import { ensureAlertPermission } from "@/lib/notify";
 
 type Candidate = Omit<Place, "id">;
 
@@ -91,7 +91,7 @@ export default function Cities() {
               <li key={`${c.lat},${c.lon}`} className="flex items-center justify-between gap-3 px-4 py-2.5">
                 <span className="min-w-0">
                   <span className="block truncate">{c.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{c.detail}</span>
+                  <span className="block truncate text-sm text-muted-foreground">{c.detail}</span>
                 </span>
                 <Button size="sm" variant={added ? "ghost" : "outline"} disabled={added} onClick={() => places.add(c)} aria-label={`Agregar ${c.name}`}>
                   {added ? <Check /> : <Plus />}
@@ -113,14 +113,17 @@ export default function Cities() {
       ) : (
         <p className="text-sm text-muted-foreground">Todavía no guardaste lugares. También podés guardar zonas en el mar desde el observatorio.</p>
       )}
+      {saved.length > 0 && (
+        <p className="mt-2 text-sm text-muted-foreground">La campana activa los avisos de ese lugar: ráfagas fuertes, mar gruesa, tormentas y lluvia intensa.</p>
+      )}
 
-      <AlertSettings />
     </Shell>
   );
 }
 
 function SavedRow({ p }: { p: Place }) {
   const [editing, setEditing] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [name, setName] = useState(p.name);
   const save = () => {
     if (name.trim()) places.rename(p.id, name.trim());
@@ -144,11 +147,27 @@ function SavedRow({ p }: { p: Place }) {
       ) : (
         <span className="min-w-0">
           <span className="block truncate">{p.name}</span>
-          <span className="block truncate text-xs text-muted-foreground">{p.kind === "zone" ? `Zona · ${p.detail}` : p.detail}</span>
+          <span className="block truncate text-sm text-muted-foreground">
+            {blocked ? "Notificaciones bloqueadas en el navegador" : p.kind === "zone" ? `Zona · ${p.detail}` : p.detail}
+          </span>
         </span>
       )}
       {!editing && (
         <span className="flex shrink-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-pressed={!!p.alerts}
+            aria-label={`Avisos para ${p.name}`}
+            className={p.alerts ? "text-primary-ink" : ""}
+            onClick={async () => {
+              if (p.alerts) return places.setAlerts(p.id, false);
+              if ((await ensureAlertPermission()) === "granted") places.setAlerts(p.id, true);
+              else setBlocked(true);
+            }}
+          >
+            {p.alerts ? <Bell className="fill-current" /> : <BellOff />}
+          </Button>
           <Button size="icon" variant="ghost" aria-label={`Renombrar ${p.name}`} onClick={() => setEditing(true)}>
             <Pencil />
           </Button>

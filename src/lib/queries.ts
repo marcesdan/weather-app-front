@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAir, fetchIpLocation, fetchOneCall, placeName, reverseGeocode } from "./api";
-import { fetchPoint } from "./openmeteo";
+import { fetchAir, fetchIpLocation, fetchNowcast, fetchOneCall, placeName, reverseGeocode } from "./api";
+import { fetchMinutely15, fetchPoint } from "./openmeteo";
 import { coordKey } from "./places";
 
 const TEN_MIN = 10 * 60_000; // OpenWeatherMap updates its model every 10 minutes
@@ -30,6 +30,19 @@ export const useAir = (lat?: number, lon?: number) =>
     enabled: lat != null && lon != null,
     staleTime: 30 * 60_000,
     refetchInterval: 30 * 60_000,
+  });
+
+// Minute nowcast from OpenWeatherMap where it exists, else Open-Meteo's 15-minute steps (Argentina).
+export const useRainSoon = (lat?: number, lon?: number) =>
+  useQuery({
+    queryKey: ["rain-soon", lat != null && lon != null ? coordKey(lat, lon) : null],
+    queryFn: async () => {
+      const minute = await fetchNowcast(lat!, lon!).catch(() => []);
+      return minute.length ? { step: 1, points: minute } : { step: 15, points: await fetchMinutely15({ lat: lat!, lon: lon! }) };
+    },
+    enabled: lat != null && lon != null,
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
   });
 
 export type Here = { name: string; lat: number; lon: number; detail: string; source: "gps" | "ip" };

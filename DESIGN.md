@@ -33,4 +33,21 @@ One entrance (`.rise`: the reading rises with a blur-in once), the sky's own mot
 
 ## Observatory
 
-Keeps its own opaque surface and map; the sky is hidden there. Heat ramp: the shared amber chart ramp ending in danger red.
+Keeps its own opaque surface and map; the sky is hidden there. Data colours never come from the UI theme (amber is for controls and selection): each quantity uses its field's conventional scale, interpolated continuously, defined in `wind-canvas.ts` `LAYERS`:
+- Wind (kn, top 45): calm blue → teal → green → yellow → orange → red → magenta (Windy's convention). Legend speaks the chosen unit.
+- Waves (m, top 6): deep blue → cyan → teal → yellow → orange → crimson.
+- Storm / CAPE (J/kg, top 3000) and rain (mm/h, top 15, radar scale light blue → blue → green → yellow → red): zero is transparent.
+- The heat fades out over the last half cell of the forecast grid: no hard rectangles.
+- Live OpenWeatherMap layers (radar, clouds) come from the backend tile proxy and say they are live, not tied to the slider.
+
+## Navigation and motion between pages
+
+- Pages are transparent over the shared sky, so page changes are a sequential fade (old out in 110 ms, new in 200 ms after a 110 ms delay), never Ionic's slide, which shows both pages at once.
+- Back is `BackLink` (`components/shell.tsx`): it pops Ionic's stack (`goBack`); a plain link to `/` pushes a duplicate page.
+- Strips (hours, places) bleed to the screen edge with snap; the cut item at the edge is the swipe affordance.
+
+## Home content
+
+- Facts row: rain chance, humidity, wind, air quality (level + colour dot; PM2.5 and the 24 h outlook in a popover on tap/click).
+- "Llueve en X min" card only when rain is coming or falling: OpenWeatherMap 1-minute nowcast where it exists, Open-Meteo 15-minute steps elsewhere (Argentina). Rain-radar blue bars.
+- Saved places open their own weather at `/lugar/:id` (same layout, sky of that place). Units (°C/°F; km/h, m/s, kn, mph) live in Ajustes. Alerts are per place: the bell in Ciudades.

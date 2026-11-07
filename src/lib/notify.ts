@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { getPref, setPref, usePref } from "./prefs";
+import { usePlaces } from "./places";
 import { runCheck } from "./watch";
 
 export const notificationsSupported = () => typeof window !== "undefined" && "Notification" in window;
@@ -22,22 +22,16 @@ async function show(title: string, options: Opts) {
   new Notification(title, options);
 }
 
-export async function enableAlerts(): Promise<NotificationPermission> {
-  const permission = await Notification.requestPermission();
+// Asks for permission once and keeps a background check registered while any place has alerts on.
+export async function ensureAlertPermission(): Promise<NotificationPermission> {
+  if (!notificationsSupported()) return "denied";
+  const permission = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
   if (permission !== "granted") return permission;
-  setPref("alerts", "on");
   const reg = await registration();
   const sync = (reg as (ServiceWorkerRegistration & { periodicSync?: { register(tag: string, o: { minInterval: number }): Promise<void> } }) | null)
     ?.periodicSync;
   await sync?.register("weather-alerts", { minInterval: 60 * 60_000 }).catch(() => {}); // needs the installed app
   return permission;
-}
-
-export async function disableAlerts() {
-  setPref("alerts", "off");
-  const reg = await registration();
-  const sync = (reg as (ServiceWorkerRegistration & { periodicSync?: { unregister(tag: string): Promise<void> } }) | null)?.periodicSync;
-  await sync?.unregister("weather-alerts").catch(() => {});
 }
 
 export const sendTestAlert = () =>
@@ -50,16 +44,15 @@ export const sendTestAlert = () =>
     data: { url: "/observatory" },
   });
 
-const alertsOn = () => getPref<"on" | "off">("alerts", "off") === "on" && notificationsSupported() && Notification.permission === "granted";
-
-// While the app is open: check on start and every 30 minutes. The service worker covers the closed app where it can.
+// While the app is open: check on start and every 30 minutes, for the places that have alerts on.
+// The service worker covers the closed app where it can.
 export function useAlertWatch() {
-  const [pref] = usePref<"on" | "off">("alerts", "off");
+  const watched = usePlaces().filter((p) => p.alerts).map((p) => p.id).join(",");
   useEffect(() => {
-    if (!alertsOn()) return;
+    if (!watched || !notificationsSupported() || Notification.permission !== "granted") return;
     const tick = () => void runCheck(show).catch(() => {});
     tick();
     const id = setInterval(tick, 30 * 60_000);
     return () => clearInterval(id);
-  }, [pref]);
+  }, [watched]);
 }

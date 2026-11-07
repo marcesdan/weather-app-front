@@ -3,6 +3,9 @@ import onecall from "./data/onecall.json" with { type: "json" };
 import geoDirect from "./data/geo-direct.json" with { type: "json" };
 
 export const API = "http://api.test/api/v1";
+export const ONECALL = onecall;
+// Ionic keeps left pages mounted (hidden); assertions about "the screen" look at the visible page only.
+export const screen = (page: Page) => page.locator("ion-router-outlet > .ion-page:not(.ion-page-hidden)");
 // A spot off Mar del Plata: reverse geocoding returns [] at sea (v1 crashed there).
 export const AT_SEA = { latitude: -38.3, longitude: -57.0 };
 
@@ -34,6 +37,11 @@ function series(vars: string[], hours: number) {
 }
 
 function openMeteo(url: URL) {
+  if (url.searchParams.has("minutely_15")) {
+    // Dry now, rain from the third quarter-hour: "Llueve en ~30 min".
+    const t0 = Math.floor(Date.now() / 1000);
+    return { minutely_15: { time: Array.from({ length: 8 }, (_, i) => t0 + i * 900), precipitation: [0, 0, 0.3, 0.6, 0.4, 0, 0, 0] } };
+  }
   const n = url.searchParams.get("latitude")!.split(",").length;
   const vars = url.searchParams.get("hourly")!.split(",");
   const hours = Number(url.searchParams.get("forecast_hours") ?? 72);
@@ -60,6 +68,7 @@ export async function mockNetwork(page: Page, { reverse = [] }: Partial<Mock> = 
   await page.route("http://api.test/api/v2/**", (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.startsWith("/api/v2/tiles/")) return route.fulfill({ body: PNG_1PX, contentType: "image/png" });
+    if (path === "/api/v2/nowcast") return route.fulfill({ json: { data: [] } }); // like Argentina: no minute data
     if (path === "/api/v2/air") {
       const t0 = Math.floor(Date.now() / 1000);
       return route.fulfill({

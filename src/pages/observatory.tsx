@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WindArrow } from "@/components/weather";
-import { drawHeat, LAYERS, RAMP_CSS, startParticles, type Field, type Layer } from "@/components/wind-canvas";
+import { BackLink } from "@/components/shell";
+import { drawHeat, LAYERS, legendCss, startParticles, type Field, type Layer } from "@/components/wind-canvas";
 import { fetchAtmo, fetchSea, grid, HOURS, type PointForecast } from "@/lib/openmeteo";
 import { beaufort, BEAUFORT_NAME, compass, fmtHour, fmtWeekday, fromMs, UNIT_LABEL, type WindUnit } from "@/lib/format";
 import { evaluate } from "@/lib/alerts";
@@ -65,12 +66,10 @@ export default function Observatory() {
     <IonPage>
     <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-2 border-b px-2 py-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
-        <Link to="/" aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
-            <ChevronLeft className="size-5" />
-          </Link>
+        <BackLink to="/" />
         <h1 className="flex-1 font-display font-semibold tracking-tight text-2xl leading-none">Observatorio</h1>
         <div role="radiogroup" aria-label="Unidad de viento" className="flex rounded-md border p-0.5 text-sm">
-          {(["kn", "ms", "kmh"] as WindUnit[]).map((u) => (
+          {(["kmh", "ms", "kn", "mph"] as WindUnit[]).map((u) => (
             <button
               key={u}
               role="radio"
@@ -108,7 +107,7 @@ export default function Observatory() {
               En vivo, de OpenWeatherMap. No sigue el horario.
             </p>
           ) : (
-            <Legend layer={layer} />
+            <Legend layer={layer} unit={unit} />
           )}
           {field.isError && (
             <p className="absolute inset-x-2 bottom-14 z-[500] rounded-md bg-background/95 p-2 text-center text-sm">
@@ -272,16 +271,16 @@ function MapView({
   );
 }
 
-function Legend({ layer }: { layer: Layer }) {
+function Legend({ layer, unit }: { layer: Layer; unit: WindUnit }) {
   const spec = LAYERS[layer];
+  // Wind legend speaks the chosen unit; the scale itself is defined in knots.
+  const top = layer === "wind" ? `${Math.round(fromMs(spec.max / 1.943844, unit))} ${UNIT_LABEL[unit]}` : `${spec.max} ${spec.unit}`;
   return (
-    <div className="pointer-events-none absolute bottom-2 left-2 z-[500] rounded-md border bg-background/90 px-2 py-1.5 text-xs">
-      <div className="h-1.5 w-32 rounded-full" style={{ background: RAMP_CSS }} aria-hidden />
+    <div className="pointer-events-none absolute bottom-2 left-2 z-[500] rounded-md border bg-background/90 px-2 py-1.5 text-sm">
+      <div className="h-1.5 w-32 rounded-full" style={{ background: legendCss(spec) }} aria-hidden />
       <div className="mt-1 flex justify-between tabular-nums text-muted-foreground">
         <span>0</span>
-        <span>
-          {spec.max}+ {spec.unit}
-        </span>
+        <span>{top}+</span>
       </div>
     </div>
   );

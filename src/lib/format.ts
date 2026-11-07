@@ -14,9 +14,13 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const pct = (pop: number) => `${Math.round(pop * 100)}%`;
 
-export type WindUnit = "kn" | "ms" | "kmh";
-const FACTOR: Record<WindUnit, number> = { kn: 1.943844, ms: 1, kmh: 3.6 };
-export const UNIT_LABEL: Record<WindUnit, string> = { kn: "kn", ms: "m/s", kmh: "km/h" };
+export type WindUnit = "kmh" | "kn" | "ms" | "mph";
+const FACTOR: Record<WindUnit, number> = { kn: 1.943844, ms: 1, kmh: 3.6, mph: 2.236936 };
+export const UNIT_LABEL: Record<WindUnit, string> = { kn: "kn", ms: "m/s", kmh: "km/h", mph: "mph" };
+export type TempUnit = "c" | "f";
+export type Units = { wind: WindUnit; temp: TempUnit };
+// The API answers in °C; °F is a display choice.
+export const deg = (c: number, u: Pick<Units, "temp">) => `${Math.round(u.temp === "f" ? (c * 9) / 5 + 32 : c)}°`;
 
 export const fromMs = (ms: number, unit: WindUnit) => ms * FACTOR[unit];
 export const fmtWind = (ms: number, unit: WindUnit) => `${Math.round(fromMs(ms, unit))} ${UNIT_LABEL[unit]}`;
@@ -49,7 +53,7 @@ export const compass = (deg: number) => COMPASS[Math.round((((deg % 360) + 360) 
 
 type HourLike = { dt: number; temp: number; pop: number; wind_gust?: number; wind_speed: number };
 // One plain sentence about the next 24 h, built only from the forecast (OpenWeatherMap's own summary is English-only).
-export function nextDay(hours: HourLike[], tz: string, unit: WindUnit): string {
+export function nextDay(hours: HourLike[], tz: string, unit: Units): string {
   const next = hours.slice(1, 25);
   if (!next.length) return "";
   const peak = next.reduce((a, b) => (b.temp > a.temp ? b : a));
@@ -58,13 +62,27 @@ export function nextDay(hours: HourLike[], tz: string, unit: WindUnit): string {
   const gust = Math.max(...next.map((h) => h.wind_gust ?? h.wind_speed));
   const parts = [
     peak.temp - next[0].temp >= 1
-      ? `Sube a ${Math.round(peak.temp)}° a las ${fmtHour(peak.dt, tz)}`
-      : `Baja a ${Math.round(low.temp)}° a las ${fmtHour(low.dt, tz)}`,
+      ? `Sube a ${deg(peak.temp, unit)} a las ${fmtHour(peak.dt, tz)}`
+      : `Baja a ${deg(low.temp, unit)} a las ${fmtHour(low.dt, tz)}`,
     wet ? `lluvia probable desde las ${fmtHour(wet.dt, tz)} (${pct(wet.pop)})` : "sin lluvia a la vista",
-    `ráfagas de hasta ${fmtWind(gust, unit)}`,
+    `ráfagas de hasta ${fmtWind(gust, unit.wind)}`,
   ];
   return capitalize(parts.join(", ")) + ".";
 }
 
 // OpenWeatherMap's air quality index, 1 (good) to 5 (very poor).
 export const AQI = ["", "Buena", "Aceptable", "Moderada", "Mala", "Muy mala"] as const;
+
+export type RainPoint = { dt: number; precipitation: number }; // mm/h
+const WET = 0.1; // mm/h: below this it is not raining
+// "Llueve en 12 min" / "Llueve ahora, para en unos 25 min" / null when the window stays dry.
+export function rainSoon(points: RainPoint[], now = Date.now() / 1000): string | null {
+  const ahead = points.filter((p) => p.dt >= now - 60);
+  if (!ahead.some((p) => p.precipitation >= WET)) return null;
+  const mins = (dt: number) => Math.max(1, Math.round((dt - now) / 60));
+  if (ahead[0].precipitation >= WET) {
+    const stop = ahead.find((p) => p.precipitation < WET);
+    return stop ? `Llueve ahora, para en unos ${mins(stop.dt)} min` : "Llueve ahora y sigue un buen rato";
+  }
+  return `Llueve en ${mins(ahead.find((p) => p.precipitation >= WET)!.dt)} min`;
+}

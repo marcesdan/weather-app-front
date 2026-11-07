@@ -1,4 +1,4 @@
-import { AT_SEA, expect, mockNetwork, test } from "./fixtures";
+import { AT_SEA, expect, mockNetwork, screen, test } from "./fixtures";
 
 test.use({ geolocation: AT_SEA, permissions: ["geolocation"] });
 
@@ -31,6 +31,14 @@ test("nearby towns are offered first; search, add, rename and remove a city", { 
   await expect(cards.first()).toContainText("Playa Miramar");
   await expect(cards.first()).toContainText(/\d+°/);
   await expect(cards.first().getByTestId("place-alert")).toHaveText("Ráfagas de temporal");
+
+  // A saved place opens its own weather (not the observatory), with the same layout and a way back.
+  await cards.first().click();
+  await expect(page).toHaveURL(/\/lugar\//);
+  // During the fade both pages exist for a moment, so look for the heading by name.
+  await expect(screen(page).getByRole("heading", { name: "Playa Miramar" })).toBeVisible();
+  await screen(page).getByRole("link", { name: "Volver a tu ubicación" }).click();
+  await expect(screen(page).getByRole("heading", { name: "General Pueyrredón" })).toBeVisible();
 
   await page.goto("/ciudades");
   await saved.getByRole("button", { name: "Quitar Mar del Plata" }).click();

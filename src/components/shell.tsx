@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { IonContent, IonPage, IonRefresher, IonRefresherContent } from "@ionic/react";
+import { IonContent, IonPage, IonRefresher, IonRefresherContent, useIonRouter } from "@ionic/react";
 import { ChevronLeft } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,15 +30,33 @@ export function Shell({ children, className, onRefresh }: { children: ReactNode;
   );
 }
 
-export function HeaderRow({ back, children, action }: { back?: string; children: ReactNode; action?: ReactNode }) {
+// "Back" pops Ionic's page stack instead of pushing the target again (pushing piled up duplicate pages).
+// Opened from a deep link with no history, it goes to `to` with a back transition.
+export function BackLink({ to, label = "Volver", children }: { to: string; label?: string; children?: ReactNode }) {
+  const router = useIonRouter();
+  return (
+    <a
+      href={to}
+      aria-label={label}
+      className={buttonVariants({ variant: "ghost", size: "icon" })}
+      onClick={(e) => {
+        e.preventDefault();
+        if (router.canGoBack()) router.goBack();
+        else router.push(to, "back", "pop");
+      }}
+    >
+      {children ?? <ChevronLeft className="size-5" />}
+    </a>
+  );
+}
+
+export function HeaderRow({ back, lead, children, action }: { back?: string; lead?: ReactNode; children: ReactNode; action?: ReactNode }) {
   return (
     <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2 py-2">
       {back ? (
-        <Link to={back} aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
-            <ChevronLeft className="size-5" />
-          </Link>
+        <BackLink to={back} />
       ) : (
-        <span />
+        (lead ?? <span />)
       )}
       <div className="min-w-0 text-center">{children}</div>
       {action ?? <span />}
@@ -55,9 +73,15 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
   );
 }
 
-export function Strip({ children, label }: { children: ReactNode; label: string }) {
+export function Strip({ children, label, className }: { children: ReactNode; label: string; className?: string }) {
   return (
-    <div role="list" aria-label={label} className="no-scrollbar flex snap-x gap-1 overflow-x-auto py-1">
+    // Bleeds past the column padding to the screen edge, like a carousel: the cut item at the edge says "swipe".
+    // The trailing spacer keeps the last item off the edge (end padding is dropped in some scroll containers).
+    <div
+      role="list"
+      aria-label={label}
+      className={cn("no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-1.5 overflow-x-auto px-4 py-1 after:w-2 after:shrink-0 after:content-['']", className)}
+    >
       {children}
     </div>
   );

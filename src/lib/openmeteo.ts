@@ -75,3 +75,19 @@ export function sample(values: (number | null)[], rows: number, cols: number, fr
   for (const [v, w] of corners) if (v != null) ((sum += v * w), (weight += w));
   return weight > 0 ? sum / weight : null;
 }
+
+// Next 2 hours in 15-minute steps, global (covers Argentina, where OpenWeatherMap has no minute nowcast). mm per step.
+export async function fetchMinutely15(p: Point): Promise<{ dt: number; precipitation: number }[]> {
+  const qs = new URLSearchParams({
+    latitude: p.lat.toFixed(3),
+    longitude: p.lon.toFixed(3),
+    minutely_15: "precipitation",
+    forecast_minutely_15: "8",
+    timeformat: "unixtime",
+    timezone: "GMT",
+  });
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${qs}`);
+  if (!res.ok) throw new Error(`open-meteo minutely ${res.status}`);
+  const m = ((await res.json()) as { minutely_15: { time: number[]; precipitation: (number | null)[] } }).minutely_15;
+  return m.time.map((dt, i) => ({ dt, precipitation: (m.precipitation[i] ?? 0) * 4 })); // mm per 15 min -> mm/h
+}
