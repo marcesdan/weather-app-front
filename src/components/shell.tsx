@@ -7,7 +7,19 @@ import { cn } from "@/lib/utils";
 
 // v1 layout kept: one centered column, a three-slot header row (back · title · action), content, footer.
 // Ionic owns the page (transitions, safe areas, pull to refresh); the column inside is ours.
-export function Shell({ children, className, onRefresh }: { children: ReactNode; className?: string; onRefresh?: () => Promise<unknown> }) {
+// Column width: phone-first; "wide" opens a two-column layout on desktop, "medium" a roomier single column.
+const WIDTH = { narrow: "max-w-xl", medium: "max-w-xl lg:max-w-3xl", wide: "max-w-xl lg:max-w-6xl" };
+export function Shell({
+  children,
+  className,
+  onRefresh,
+  size = "narrow",
+}: {
+  children: ReactNode;
+  className?: string;
+  onRefresh?: () => Promise<unknown>;
+  size?: keyof typeof WIDTH;
+}) {
   return (
     <IonPage className="sky-page">
       <IonContent>
@@ -16,7 +28,7 @@ export function Shell({ children, className, onRefresh }: { children: ReactNode;
             <IonRefresherContent />
           </IonRefresher>
         )}
-        <div className="mx-auto flex min-h-full w-full max-w-xl flex-col px-4 pt-[max(env(safe-area-inset-top),0.75rem)]">
+        <div className={cn("mx-auto flex min-h-full w-full flex-col px-4 pt-[max(env(safe-area-inset-top),0.75rem)] lg:px-8", WIDTH[size])}>
           <main className={cn("flex-1", className)}>{children}</main>
       <footer className="py-6 text-center text-xs text-muted-foreground">
         Datos de OpenWeatherMap y Open-Meteo. Hecho por{" "}
@@ -80,7 +92,7 @@ export function Strip({ children, label, className }: { children: ReactNode; lab
     <div
       role="list"
       aria-label={label}
-      className={cn("no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-1.5 overflow-x-auto px-4 py-1 after:w-2 after:shrink-0 after:content-['']", className)}
+      className={cn("no-scrollbar -mx-4 flex snap-x scroll-px-4 select-none gap-1.5 overflow-x-auto px-4 py-1 after:w-2 after:shrink-0 after:content-['']", className)}
     >
       {children}
     </div>

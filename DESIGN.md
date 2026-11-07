@@ -48,6 +48,9 @@ Keeps its own opaque surface and map; the sky is hidden there. Data colours neve
 
 ## Home content
 
-- Facts row: rain chance, humidity, wind, air quality (level + colour dot; PM2.5 and the 24 h outlook in a popover on tap/click).
+- Facts row: rain chance, humidity, wind (speed, compass under it), sun (sunrise, sunset under it) in the place's time zone. Air quality was tried there and dropped: it read as noise.
+- Phone: one column, hours as an edge-to-edge swipe band. From sm the band is a rounded panel; from md the hours are an 8-column grid (no sideways scroll with a mouse). Desktop (lg): two columns, the reading sticky on the left, hours, the 7-day list and other places on the right.
+- Próximos días: each day is an accordion row that opens hour by hour in place (Open-Meteo hourly, WMO codes mapped to our icons in `wmo.ts`; One Call only covers 48 h).
+- Toggle groups keep a small gap between items (`spacing={0.5}`): spacing 0 is shadcn's segmented style and squares the inner items.
 - "Llueve en X min" card only when rain is coming or falling: OpenWeatherMap 1-minute nowcast where it exists, Open-Meteo 15-minute steps elsewhere (Argentina). Rain-radar blue bars.
 - Saved places open their own weather at `/lugar/:id` (same layout, sky of that place). Units (°C/°F; km/h, m/s, kn, mph) live in Ajustes. Alerts are per place: the bell in Ciudades.

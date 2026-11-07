@@ -58,3 +58,13 @@ describe("rain soon", () => {
     expect(rainSoon([at(0, 0), at(15, 0.05)], now)).toBeNull();
   });
 });
+
+describe("wmo codes", () => {
+  it("map to our icons and Spanish text, day and night", async () => {
+    const { wmo } = await import("./wmo");
+    expect(wmo(0, true)).toEqual({ icon: "01d", text: "Despejado" });
+    expect(wmo(95, false)).toEqual({ icon: "11n", text: "Tormenta" });
+    expect(wmo(63, true).icon).toBe("10d");
+    expect(wmo(999, true).icon).toBe("03d"); // unknown code falls back to cloud
+  });
+});

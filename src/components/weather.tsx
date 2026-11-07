@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { Droplets, Navigation2, Umbrella, Undo2 } from "lucide-react";
-import type { Air, OneCall } from "@/lib/api";
-import { AirFact } from "./air";
-import { capitalize, compass, deg, fmtHour, fmtWind, nextDay, pct, type Units } from "@/lib/format";
+import { Droplets, Navigation2, Sunrise, Umbrella, Undo2 } from "lucide-react";
+import type { OneCall } from "@/lib/api";
+import { capitalize, compass, deg, fmtHour, fmtTime, fmtWind, nextDay, pct, type Units } from "@/lib/format";
 import type { Alert } from "@/lib/alerts";
 import { ConditionIcon } from "./condition-icon";
 import { cn } from "@/lib/utils";
@@ -13,7 +12,7 @@ export function WindArrow({ deg, className }: { deg: number; className?: string 
 }
 
 // The reading sits on the sky itself, no card: the sky behind it is the picture of this same state.
-export function Hero({ w, unit, hour, onNow, air }: { w: OneCall; unit: Units; hour: number | null; onNow: () => void; air?: Air }) {
+export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: Units; hour: number | null; onNow: () => void }) {
   const h = hour == null ? null : w.hourly[hour];
   const s = h ?? w.current;
   const cond = s.weather[0];
@@ -41,35 +40,39 @@ export function Hero({ w, unit, hour, onNow, air }: { w: OneCall; unit: Units; h
       <p className="text-base text-muted-foreground tabular-nums">
         Máx {deg(today.temp.max, unit)} · Mín {deg(today.temp.min, unit)} · Sensación {deg(s.feels_like, unit)}
       </p>
-      <dl className={cn("glass mx-auto mt-5 grid max-w-md divide-x divide-border rounded-2xl py-2.5 text-sm", air?.current ? "grid-cols-4" : "grid-cols-3")}>
+      <dl className="glass mx-auto mt-5 grid max-w-md grid-cols-4 divide-x divide-border rounded-2xl py-2.5 text-sm">
         <Fact icon={<Umbrella className="size-4" />} label="Lluvia" value={pct(h ? h.pop : (w.hourly[0]?.pop ?? 0))} />
         <Fact icon={<Droplets className="size-4" />} label="Humedad" value={`${s.humidity}%`} />
-        <Fact icon={<WindArrow deg={s.wind_deg} className="size-4" />} label={`Viento ${compass(s.wind_deg)}`} value={fmtWind(s.wind_speed, unit.wind)} />
-        {air?.current && (
-          <div>
-            <dt className="sr-only">Calidad del aire</dt>
-            <dd>
-              <AirFact air={air} tz={w.timezone} />
-            </dd>
-          </div>
-        )}
+        <Fact
+          icon={<WindArrow deg={s.wind_deg} className="size-4" />}
+          label="Viento"
+          value={fmtWind(s.wind_speed, unit.wind)}
+          sub={compass(s.wind_deg)}
+        />
+        <Fact
+          icon={<Sunrise className="size-4" />}
+          label="Sol"
+          value={fmtTime(today.sunrise, w.timezone)}
+          sub={`se pone ${fmtTime(today.sunset, w.timezone)}`}
+        />
       </dl>
       {/* Stays in the layout while an hour is picked, so the strip below never jumps. */}
-      <p className={cn("mx-auto mt-4 max-w-sm text-sm text-pretty transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
+      <p className={cn("mx-auto mt-4 max-w-sm text-sm text-balance transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
         {nextDay(w.hourly, w.timezone, unit)}
       </p>
     </section>
   );
 }
 
-function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Fact({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div className="px-2">
       <dt className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
         {icon}
         {label}
       </dt>
-      <dd className="mt-0.5 text-base font-semibold tabular-nums">{value}</dd>
+      <dd className="mt-0.5 text-base font-semibold whitespace-nowrap tabular-nums">{value}</dd>
+      {sub && <dd className="text-sm whitespace-nowrap text-muted-foreground">{sub}</dd>}
     </div>
   );
 }
@@ -78,13 +81,13 @@ function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; va
 export function HourCell({ h, tz, selected, onPick, unit }: { h: OneCall["hourly"][number]; tz: string; selected: boolean; onPick: () => void; unit: Units }) {
   const cond = h.weather[0];
   return (
-    <div role="listitem" className="shrink-0 snap-start">
+    <div role="listitem" className="shrink-0 snap-start md:shrink">
     <button
       aria-pressed={selected}
       aria-label={`${fmtHour(h.dt, tz)}: ${deg(h.temp, unit)}, ${cond?.description}, lluvia ${pct(h.pop)}`}
       onClick={onPick}
       className={cn(
-        "flex w-14 flex-col items-center gap-1.5 rounded-xl py-2.5 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
+        "flex w-14 flex-col md:w-full items-center gap-1.5 rounded-xl py-2.5 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
         selected ? "bg-primary/90 text-primary-foreground [text-shadow:none]" : "hover:bg-accent",
       )}
     >
@@ -114,11 +117,11 @@ export function PlaceCard({
 }) {
   const cond = w?.current.weather[0];
   return (
-    <div role="listitem" className="shrink-0 snap-start">
+    <div role="listitem" className="shrink-0 snap-start md:shrink">
     <Link
       to={to}
       data-testid="place-card"
-      className="glass flex h-full w-40 flex-col gap-2 rounded-2xl p-3 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/60"
+      className="glass flex h-full w-40 flex-col md:w-full gap-2 rounded-2xl p-3 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/60"
     >
       <span className="truncate text-base font-semibold" title={name}>
         {name}

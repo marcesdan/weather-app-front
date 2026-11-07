@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAir, fetchIpLocation, fetchNowcast, fetchOneCall, placeName, reverseGeocode } from "./api";
+import { API_V2, fetchIpLocation, fetchNowcast, fetchOneCall, placeName, reverseGeocode } from "./api";
 import { fetchMinutely15, fetchPoint } from "./openmeteo";
 import { coordKey } from "./places";
 
@@ -21,15 +21,6 @@ export const usePointForecast = (lat: number, lon: number, enabled = true) =>
     queryFn: () => fetchPoint({ lat, lon }),
     staleTime: 30 * 60_000,
     enabled,
-  });
-
-export const useAir = (lat?: number, lon?: number) =>
-  useQuery({
-    queryKey: ["air", lat != null && lon != null ? coordKey(lat, lon) : null],
-    queryFn: () => fetchAir(lat!, lon!),
-    enabled: lat != null && lon != null,
-    staleTime: 30 * 60_000,
-    refetchInterval: 30 * 60_000,
   });
 
 // Minute nowcast from OpenWeatherMap where it exists, else Open-Meteo's 15-minute steps (Argentina).
@@ -100,15 +91,11 @@ export const useHere = () =>
 
 export type Nearby = { name: string; lat: number; lon: number; kind: string; population: number };
 
-// Towns and cities within 60 km from OpenStreetMap (Overpass, no key), biggest first: shortcuts in the add-city list.
+// Towns and cities within 60 km (OpenStreetMap via our backend, cached a day), biggest first: shortcuts in "add city".
 export async function fetchNearby(lat: number, lon: number): Promise<Nearby[]> {
-  const q = `[out:json][timeout:15];node(around:60000,${lat.toFixed(3)},${lon.toFixed(3)})[place~"^(city|town)$"][name];out 40;`;
-  const res = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: new URLSearchParams({ data: q }) });
-  if (!res.ok) throw new Error(`overpass ${res.status}`);
-  const { elements } = (await res.json()) as { elements: { lat: number; lon: number; tags: Record<string, string> }[] };
-  return elements
-    .map((e) => ({ name: e.tags["name:es"] ?? e.tags.name, lat: e.lat, lon: e.lon, kind: e.tags.place, population: Number(e.tags.population) || 0 }))
-    .sort((a, b) => b.population - a.population);
+  const res = await fetch(`${API_V2}/nearby?${new URLSearchParams({ lat: lat.toFixed(3), lon: lon.toFixed(3) })}`);
+  if (!res.ok) throw new Error(`nearby ${res.status}`);
+  return res.json() as Promise<Nearby[]>;
 }
 
 export const useNearby = (lat?: number, lon?: number) =>

@@ -16,13 +16,8 @@ test.describe("with GPS at sea", () => {
     await expect(hours.first()).toContainText("60%"); // v1 floored pop and always showed 0%
     // No minute nowcast here (empty, like Argentina): Open-Meteo's 15-minute steps fill in.
     await expect(page.getByTestId("rain-soon")).toContainText(/Llueve en \d+ min/);
-    // Air quality is one more fact; the details open on tap.
-    const air = page.getByTestId("air");
-    await expect(air).toContainText("Aceptable");
-    await air.click();
-    const detail = page.getByTestId("air-detail");
-    await expect(detail).toContainText("PM2.5 8 µg/m³");
-    await expect(detail).toContainText(/Mala desde las \d+ h/);
+    // Sunrise and sunset in the place's own time zone (fixture: Europe/London).
+    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Sol\s*\d{1,2}:\d{2}\s*se pone \d{1,2}:\d{2}/);
     expect(errors).toEqual([]);
   });
 
@@ -31,7 +26,11 @@ test.describe("with GPS at sea", () => {
     await page.goto("/");
     await page.getByRole("link", { name: /Próximos 7 días/ }).click();
     await expect(page).toHaveURL(/\/dias$/);
-    await expect(page.getByTestId("days").getByRole("listitem")).toHaveCount(7);
+    const days = screen(page).getByTestId("days");
+    await expect(days.locator("[data-slot=accordion-trigger]")).toHaveCount(7);
+    // A day opens in place, hour by hour (Open-Meteo), without leaving the page.
+    await days.locator("[data-slot=accordion-trigger]").first().click();
+    await expect(days.getByRole("list", { name: /Hora a hora/ }).getByRole("listitem").first()).toBeVisible();
   });
 });
 

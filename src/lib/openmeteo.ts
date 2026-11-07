@@ -38,6 +38,36 @@ async function call(host: string, path: string, vars: readonly string[], pts: Po
 }
 
 export const fetchAtmo = (pts: Point[]) => call("api.open-meteo.com", "forecast", ATMO, pts);
+// The map grid asks only for what its layers draw: Open-Meteo weighs a request by points x variables.
+const GRID_ATMO = ["wind_speed_10m", "wind_direction_10m", "cape", "precipitation"] as const;
+export const fetchGridAtmo = (pts: Point[]) => call("api.open-meteo.com", "forecast", GRID_ATMO, pts);
+export const fetchGridSea = (pts: Point[]) => call("marine-api.open-meteo.com", "marine", ["wave_height"], pts);
+
+export type Box = [south: number, west: number, north: number, east: number];
+const MIN_SPAN = 3; // degrees: forecast models resolve ~10 km, a smaller grid only spends requests
+// The box the field covers for a map view. Reuses the previous box while it still covers the view at a similar
+// zoom (pans and small zooms cost nothing); otherwise a new box 2x the view, snapped so nearby views share it,
+// clamped to real latitudes and a single world copy.
+export function fieldBox(view: Box, prev: Box | null): Box {
+  const [s, w, n, e] = view;
+  const span = Math.max(n - s, e - w, MIN_SPAN);
+  if (prev) {
+    const [ps, pw, pn, pe] = prev;
+    const pspan = Math.max(pn - ps, pe - pw);
+    if (s >= ps && w >= pw && n <= pn && e <= pe && pspan <= span * 3) return prev;
+  }
+  const step = span / 2;
+  const snap = (v: number, f: (x: number) => number) => f(v / step) * step;
+  const cLat = (s + n) / 2;
+  const cLon = (((((w + e) / 2 + 180) % 360) + 360) % 360) - 180;
+  const half = Math.min(span, 180);
+  return [
+    Math.max(-80, snap(cLat - half, Math.floor)),
+    Math.max(-180, snap(cLon - half, Math.floor)),
+    Math.min(80, snap(cLat + half, Math.ceil)),
+    Math.min(180, snap(cLon + half, Math.ceil)),
+  ];
+}
 // Over land the marine model answers with nulls, which the UI shows as "sin datos de mar".
 export const fetchSea = (pts: Point[]) => call("marine-api.open-meteo.com", "marine", SEA, pts);
 
@@ -90,4 +120,30 @@ export async function fetchMinutely15(p: Point): Promise<{ dt: number; precipita
   if (!res.ok) throw new Error(`open-meteo minutely ${res.status}`);
   const m = ((await res.json()) as { minutely_15: { time: number[]; precipitation: (number | null)[] } }).minutely_15;
   return m.time.map((dt, i) => ({ dt, precipitation: (m.precipitation[i] ?? 0) * 4 })); // mm per 15 min -> mm/h
+}
+
+// Hour by hour for the next 8 days (One Call only has 48 h), for the expandable rows in Próximos días.
+export type HourRow = { dt: number; temp: number; pop: number; code: number; day: boolean; wind: number; windDeg: number };
+export async function fetchWeekHours(p: Point): Promise<HourRow[]> {
+  const qs = new URLSearchParams({
+    latitude: p.lat.toFixed(3),
+    longitude: p.lon.toFixed(3),
+    hourly: "temperature_2m,precipitation_probability,weather_code,is_day,wind_speed_10m,wind_direction_10m",
+    wind_speed_unit: "ms",
+    forecast_days: "8",
+    timeformat: "unixtime",
+    timezone: "GMT",
+  });
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${qs}`);
+  if (!res.ok) throw new Error(`open-meteo hourly ${res.status}`);
+  const h = ((await res.json()) as { hourly: Record<string, (number | null)[]> & { time: number[] } }).hourly;
+  return h.time.map((dt, i) => ({
+    dt,
+    temp: h.temperature_2m[i] ?? 0,
+    pop: (h.precipitation_probability[i] ?? 0) / 100,
+    code: h.weather_code[i] ?? 0,
+    day: h.is_day[i] === 1,
+    wind: h.wind_speed_10m[i] ?? 0,
+    windDeg: h.wind_direction_10m[i] ?? 0,
+  }));
 }

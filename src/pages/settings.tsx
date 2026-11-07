@@ -19,7 +19,7 @@ function Choice<T extends string>({ label, value, options, onChange }: { label: 
         value={[value]}
         onValueChange={(v: string[]) => v[0] && onChange(v[0] as T)}
         className="rounded-lg bg-muted p-0.5"
-        spacing={0}
+        spacing={0.5}
       >
         {options.map(([v, text]) => (
           <ToggleGroupItem key={v} value={v} className="h-8 px-3 data-[pressed]:bg-primary data-[pressed]:text-primary-foreground data-[pressed]:[text-shadow:none]">

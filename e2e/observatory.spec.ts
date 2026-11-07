@@ -67,3 +67,25 @@ test("going back from the observatory leaves no errors (Ionic keeps the page cac
   await expect.poll(() => page.getByTestId("map").locator("..").locator("canvas").first().evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
+
+test("panning the map inside the loaded area sends no new forecast requests (Open-Meteo rate limits)", async ({ page }) => {
+  await mockNetwork(page);
+  let gridRequests = 0;
+  page.on("request", (r) => {
+    if (/open-meteo\.com\/v1\/(forecast|marine)\?latitude=[^&]*%2C/.test(r.url())) gridRequests++; // multi-point = map grid
+  });
+  await page.goto("/observatory?lat=-38.3&lon=-57.0");
+  await expect(page.getByTestId("hour-label")).toContainText("(ahora)");
+  await page.waitForTimeout(1200);
+  const before = gridRequests;
+  const map = page.getByTestId("map");
+  const box = (await map.boundingBox())!;
+  for (const dx of [40, -60, 30]) {
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2 + dx / 2, { steps: 5 });
+    await page.mouse.up();
+  }
+  await page.waitForTimeout(1500);
+  expect(gridRequests - before).toBe(0);
+});

@@ -68,30 +68,18 @@ export async function mockNetwork(page: Page, { reverse = [] }: Partial<Mock> = 
   await page.route("http://api.test/api/v2/**", (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.startsWith("/api/v2/tiles/")) return route.fulfill({ body: PNG_1PX, contentType: "image/png" });
-    if (path === "/api/v2/nowcast") return route.fulfill({ json: { data: [] } }); // like Argentina: no minute data
-    if (path === "/api/v2/air") {
-      const t0 = Math.floor(Date.now() / 1000);
+    if (path === "/api/v2/nearby")
       return route.fulfill({
-        json: {
-          current: { dt: t0, main: { aqi: 2 }, components: { pm2_5: 8.4 } },
-          forecast: Array.from({ length: 24 }, (_, i) => ({ dt: t0 + i * 3600, aqi: i === 6 ? 4 : 2, pm2_5: 9 })),
-        },
+        json: [
+          { name: "Mar del Plata", lat: -38.0, lon: -57.55, kind: "city", population: 664892 },
+          { name: "Miramar", lat: -38.27, lon: -57.84, kind: "town", population: 29433 },
+          { name: "Batán", lat: -37.9, lon: -57.7, kind: "town", population: 10152 },
+        ],
       });
-    }
+    if (path === "/api/v2/nowcast") return route.fulfill({ json: { data: [] } }); // like Argentina: no minute data
     return route.fulfill({ status: 404, json: {} });
   });
   await page.route(/open-meteo\.com/, (route) => route.fulfill({ json: openMeteo(new URL(route.request().url())) }));
-  await page.route(/overpass-api\.de/, (route) =>
-    route.fulfill({
-      json: {
-        elements: [
-          { lat: -38.0, lon: -57.55, tags: { name: "Mar del Plata", place: "city", population: "664892" } },
-          { lat: -38.27, lon: -57.84, tags: { name: "Miramar", place: "town", population: "29433" } },
-          { lat: -37.9, lon: -57.7, tags: { name: "Batán", place: "town", population: "10152" } },
-        ],
-      },
-    }),
-  );
   await page.route(/tile\.openstreetmap\.org/, (route) => route.fulfill({ body: PNG_1PX, contentType: "image/png" }));
 }
 

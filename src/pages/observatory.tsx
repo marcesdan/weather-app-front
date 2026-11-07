@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { WindArrow } from "@/components/weather";
 import { BackLink } from "@/components/shell";
 import { drawHeat, LAYERS, legendCss, startParticles, type Field, type Layer } from "@/components/wind-canvas";
-import { fetchAtmo, fetchSea, grid, HOURS, type PointForecast } from "@/lib/openmeteo";
+import { fetchGridAtmo, fetchGridSea, fieldBox, grid, HOURS, type Box, type PointForecast } from "@/lib/openmeteo";
 import { beaufort, BEAUFORT_NAME, compass, fmtHour, fmtWeekday, fromMs, UNIT_LABEL, type WindUnit } from "@/lib/format";
 import { evaluate } from "@/lib/alerts";
 import { formatCoords, places } from "@/lib/places";
@@ -27,8 +27,8 @@ type Live = keyof typeof LIVE;
 type View = Layer | Live;
 const isLive = (v: View): v is Live => v in LIVE;
 
-const ROWS = 8;
-const COLS = 8;
+const ROWS = 6;
+const COLS = 6;
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export default function Observatory() {
@@ -45,18 +45,28 @@ export default function Observatory() {
   const [unit, setUnit] = usePref<WindUnit>("unit", "kmh");
   const [layer, setLayer] = useState<View>("wind");
   const [hour, setHour] = useState(0);
-  const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
+  // The field covers a box larger than the view; panning inside it never refetches (Open-Meteo rate limits).
+  const [box, setBox] = useState<Box | null>(null);
+  const onView = useMemo(() => {
+    let t = 0;
+    return (view: Box) => {
+      clearTimeout(t);
+      t = window.setTimeout(() => setBox((prev) => fieldBox(view, prev)), 500); // settle after a drag or zoom
+    };
+  }, []);
   const [picked, setPicked] = useState<{ lat: number; lon: number } | null>(params.has("lat") ? start : null);
 
   const field = useQuery({
-    queryKey: ["field", bounds?.map((b) => b.toFixed(1)).join(",")],
-    enabled: !!bounds,
-    staleTime: 30 * 60_000,
+    queryKey: ["field", box?.join(",")],
+    enabled: !!box,
+    staleTime: 60 * 60_000,
+    gcTime: 2 * 60 * 60_000,
+    retry: false, // a 429 will not clear in a second; the next view change tries again
     placeholderData: (prev) => prev,
     queryFn: async (): Promise<Field> => {
-      const [s, w, n, e] = bounds!;
+      const [s, w, n, e] = box!;
       const pts = grid(s, w, n, e, ROWS, COLS);
-      const [atmo, sea] = await Promise.all([fetchAtmo(pts), fetchSea(pts).catch(() => pts.map(() => ({ time: [] })))]);
+      const [atmo, sea] = await Promise.all([fetchGridAtmo(pts), fetchGridSea(pts).catch(() => pts.map(() => ({ time: [] })))]);
       return { rows: ROWS, cols: COLS, south: s, west: w, north: n, east: e, atmo, sea };
     },
   });
@@ -85,7 +95,7 @@ export default function Observatory() {
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <div className="relative h-[45dvh] shrink-0 lg:h-auto lg:flex-1">
-          <MapView start={start} field={field.data ?? null} layer={layer} hour={hour} picked={picked} onBounds={setBounds} onPick={setPicked} />
+          <MapView start={start} field={field.data ?? null} layer={layer} hour={hour} picked={picked} onBounds={onView} onPick={setPicked} />
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] flex flex-wrap gap-1.5 p-2">
             <div role="radiogroup" aria-label="Capa" className="pointer-events-auto flex gap-1 rounded-lg border bg-background/90 p-1 shadow-sm">
               {([...Object.keys(LAYERS), ...Object.keys(LIVE)] as View[]).map((l) => (
@@ -191,8 +201,7 @@ function MapView({
       for (const c of [heat.current!, flow.current!]) ((c.width = w * dpr), (c.height = h * dpr), (c.style.width = `${w}px`), (c.style.height = `${h}px`));
     };
     const report = () => {
-      // Pad the view so particles entering from the edges have data.
-      const b = map.getBounds().pad(0.15);
+      const b = map.getBounds();
       onBounds([b.getSouth(), b.getWest(), b.getNorth(), b.getEast()]);
     };
     const redraw = () => {

@@ -1,5 +1,8 @@
 // Times are shown in the place's own time zone (from the API), never the browser's.
 
+export const fmtTime = (unix: number, timeZone: string) =>
+  new Intl.DateTimeFormat("es-AR", { hour: "numeric", minute: "2-digit", hourCycle: "h23", timeZone }).format(unix * 1000);
+
 // es-AR pads hours ("02"); strip it so the strip reads "2 h".
 export const fmtHour = (unix: number, timeZone: string) =>
   `${Number(new Intl.DateTimeFormat("es-AR", { hour: "numeric", hourCycle: "h23", timeZone }).format(unix * 1000))} h`;
@@ -69,9 +72,6 @@ export function nextDay(hours: HourLike[], tz: string, unit: Units): string {
   ];
   return capitalize(parts.join(", ")) + ".";
 }
-
-// OpenWeatherMap's air quality index, 1 (good) to 5 (very poor).
-export const AQI = ["", "Buena", "Aceptable", "Moderada", "Mala", "Muy mala"] as const;
 
 export type RainPoint = { dt: number; precipitation: number }; // mm/h
 const WET = 0.1; // mm/h: below this it is not raining

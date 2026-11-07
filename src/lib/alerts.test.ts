@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alertTag, evaluate } from "./alerts";
-import { sample } from "./openmeteo";
+import { fieldBox, sample } from "./openmeteo";
 
 const now = 1_800_000_000;
 const hours = (n: number) => Array.from({ length: n }, (_, i) => now + i * 3600);
@@ -29,5 +29,24 @@ describe("alerts", () => {
   it("grid sampling skips null cells", () => {
     expect(sample([1, null, 3, null], 2, 2, 0.5, 0)).toBe(2);
     expect(sample([null, null, null, null], 2, 2, 0.5, 0.5)).toBeNull();
+  });
+});
+
+describe("map field box", () => {
+  it("panning inside the fetched box reuses it (no new request)", () => {
+    const first = fieldBox([-39, -59, -37, -56], null);
+    expect(fieldBox([-38.6, -58.5, -37.4, -56.4], first)).toBe(first);
+  });
+  it("zooming far out asks for a new box, clamped to real latitudes and one world", () => {
+    const first = fieldBox([-39, -59, -37, -56], null);
+    const out = fieldBox([-95, -224, 51, 120], first);
+    expect(out).not.toBe(first);
+    expect(out[0]).toBeGreaterThanOrEqual(-80);
+    expect(out[2]).toBeLessThanOrEqual(80);
+    expect(out[1]).toBeGreaterThanOrEqual(-180);
+    expect(out[3]).toBeLessThanOrEqual(180);
+  });
+  it("nearby views snap to the same box", () => {
+    expect(fieldBox([-39, -59, -37, -56], null)).toEqual(fieldBox([-39.1, -59.1, -37.1, -56.1], null));
   });
 });
