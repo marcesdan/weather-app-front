@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
+import { IonPage } from "@ionic/react";
 import "leaflet/dist/leaflet.css";
 import { BookmarkPlus, ChevronLeft, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -55,7 +56,8 @@ export default function Observatory() {
   const times = field.data?.atmo[0]?.time ?? [];
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <IonPage>
+    <div className="flex h-full flex-col bg-background">
       <header className="flex items-center gap-2 border-b px-2 py-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
         <Link to="/" aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <ChevronLeft className="size-5" />
@@ -130,6 +132,7 @@ export default function Observatory() {
         </aside>
       </div>
     </div>
+    </IonPage>
   );
 }
 

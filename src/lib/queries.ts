@@ -34,7 +34,14 @@ const lastHere = (): Here | undefined => {
   }
 };
 
-function gps(): Promise<GeolocationCoordinates | null> {
+async function gps(): Promise<{ latitude: number; longitude: number } | null> {
+  // Native asks through the OS permission sheet; the web build never ships the plugin (__NATIVE__ is a build-time constant).
+  if (__NATIVE__) {
+    const { Geolocation } = await import("@capacitor/geolocation");
+    return Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10_000, maximumAge: 2 * 3600_000 })
+      .then((p) => p.coords)
+      .catch(() => null);
+  }
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(null);
     // The API's own timeout does not run while the permission prompt is open; an ignored prompt must not hang the app.

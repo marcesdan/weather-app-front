@@ -1,0 +1,174 @@
+/* Ionic Variables and Theming. For more info, please see:
+http://ionicframework.com/docs/theming/ */
+
+/** Ionic CSS Variables **/
+:root {
+  /** primary **/
+  --ion-color-primary: var(--primary);
+  --ion-color-primary-rgb: 244, 159, 30;
+  --ion-color-primary-contrast: var(--primary-foreground);
+  --ion-color-primary-contrast-rgb: 68, 28, 6;
+  --ion-color-primary-shade: color-mix(in oklab, var(--primary), black 12%);
+  --ion-color-primary-tint: color-mix(in oklab, var(--primary), white 10%);
+
+  /** secondary **/
+  --ion-color-secondary: var(--secondary);
+  --ion-color-secondary-rgb: 233, 228, 222;
+  --ion-color-secondary-contrast: var(--secondary-foreground);
+  --ion-color-secondary-contrast-rgb: 10, 6, 5;
+  --ion-color-secondary-shade: color-mix(in oklab, var(--secondary), black 12%);
+  --ion-color-secondary-tint: color-mix(in oklab, var(--secondary), white 10%);
+
+  /** tertiary - usar accent de shadcn **/
+  --ion-color-tertiary: var(--accent);
+  --ion-color-tertiary-rgb: 247, 247, 247; /* Aproximado para el tema claro */
+  --ion-color-tertiary-contrast: var(--accent-foreground);
+  --ion-color-tertiary-contrast-rgb: 31, 31, 31;
+  --ion-color-tertiary-shade: color-mix(in oklab, var(--accent), black 12%);
+  --ion-color-tertiary-tint: color-mix(in oklab, var(--accent), white 10%);
+
+  /** success **/
+  --ion-color-success: #2dd36f;
+  --ion-color-success-rgb: 45, 211, 111;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #28ba62;
+  --ion-color-success-tint: #42d77d;
+
+  /** warning **/
+  --ion-color-warning: #ffc409;
+  --ion-color-warning-rgb: 255, 196, 9;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #e0ac08;
+  --ion-color-warning-tint: #ffca22;
+
+  /** danger - usar destructive de shadcn **/
+  --ion-color-danger: var(--destructive);
+  --ion-color-danger-rgb: 223, 34, 37;
+  --ion-color-danger-contrast: #ffffff; /* destructive-foreground is red: red-on-red */
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: color-mix(in oklab, var(--destructive), black 12%);
+  --ion-color-danger-tint: color-mix(in oklab, var(--destructive), white 10%);
+
+  /** dark - usando la lógica inversa según el tema **/
+  --ion-color-dark: var(--foreground);
+  --ion-color-dark-rgb: 10, 6, 5;
+  --ion-color-dark-contrast: var(--background);
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: var(--foreground);
+  --ion-color-dark-tint: var(--foreground);
+
+  /** medium - usando muted de shadcn **/
+  --ion-color-medium: var(--muted-foreground);
+  --ion-color-medium-rgb: 146, 148, 156;
+  --ion-color-medium-contrast: var(--muted);
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: var(--muted-foreground);
+  --ion-color-medium-tint: var(--muted-foreground);
+
+  /** light - usando la lógica inversa según el tema **/
+  --ion-color-light: var(--muted);
+  --ion-color-light-rgb: 244, 245, 248;
+  --ion-color-light-contrast: var(--muted-foreground);
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: var(--muted);
+  --ion-color-light-tint: var(--muted);
+
+  /** Ionic steps y fondos **/
+  --ion-font-family: var(--font-sans);
+  --ion-background-color-step-50: color-mix(in oklab, var(--background), var(--foreground) 5%);
+  --ion-text-color-step-50: color-mix(in oklab, var(--foreground), var(--background) 5%);
+  --ion-background-color-step-100: color-mix(in oklab, var(--background), var(--foreground) 10%);
+  --ion-text-color-step-100: color-mix(in oklab, var(--foreground), var(--background) 10%);
+  --ion-background-color-step-150: color-mix(in oklab, var(--background), var(--foreground) 15%);
+  --ion-text-color-step-150: color-mix(in oklab, var(--foreground), var(--background) 15%);
+  --ion-background-color-step-200: color-mix(in oklab, var(--background), var(--foreground) 20%);
+  --ion-text-color-step-200: color-mix(in oklab, var(--foreground), var(--background) 20%);
+  --ion-background-color-step-250: color-mix(in oklab, var(--background), var(--foreground) 25%);
+  --ion-text-color-step-250: color-mix(in oklab, var(--foreground), var(--background) 25%);
+  --ion-background-color-step-300: color-mix(in oklab, var(--background), var(--foreground) 30%);
+  --ion-text-color-step-300: color-mix(in oklab, var(--foreground), var(--background) 30%);
+  --ion-background-color-step-350: color-mix(in oklab, var(--background), var(--foreground) 35%);
+  --ion-text-color-step-350: color-mix(in oklab, var(--foreground), var(--background) 35%);
+  --ion-background-color-step-400: color-mix(in oklab, var(--background), var(--foreground) 40%);
+  --ion-text-color-step-400: color-mix(in oklab, var(--foreground), var(--background) 40%);
+  --ion-background-color-step-450: color-mix(in oklab, var(--background), var(--foreground) 45%);
+  --ion-text-color-step-450: color-mix(in oklab, var(--foreground), var(--background) 45%);
+  --ion-background-color-step-500: color-mix(in oklab, var(--background), var(--foreground) 50%);
+  --ion-text-color-step-500: color-mix(in oklab, var(--foreground), var(--background) 50%);
+  --ion-background-color-step-550: color-mix(in oklab, var(--background), var(--foreground) 55%);
+  --ion-text-color-step-550: color-mix(in oklab, var(--foreground), var(--background) 55%);
+  --ion-background-color-step-600: color-mix(in oklab, var(--background), var(--foreground) 60%);
+  --ion-text-color-step-600: color-mix(in oklab, var(--foreground), var(--background) 60%);
+  --ion-background-color-step-650: color-mix(in oklab, var(--background), var(--foreground) 65%);
+  --ion-text-color-step-650: color-mix(in oklab, var(--foreground), var(--background) 65%);
+  --ion-background-color-step-700: color-mix(in oklab, var(--background), var(--foreground) 70%);
+  --ion-text-color-step-700: color-mix(in oklab, var(--foreground), var(--background) 70%);
+  --ion-background-color-step-750: color-mix(in oklab, var(--background), var(--foreground) 75%);
+  --ion-text-color-step-750: color-mix(in oklab, var(--foreground), var(--background) 75%);
+  --ion-background-color-step-800: color-mix(in oklab, var(--background), var(--foreground) 80%);
+  --ion-text-color-step-800: color-mix(in oklab, var(--foreground), var(--background) 80%);
+  --ion-background-color-step-850: color-mix(in oklab, var(--background), var(--foreground) 85%);
+  --ion-text-color-step-850: color-mix(in oklab, var(--foreground), var(--background) 85%);
+  --ion-background-color-step-900: color-mix(in oklab, var(--background), var(--foreground) 90%);
+  --ion-text-color-step-900: color-mix(in oklab, var(--foreground), var(--background) 90%);
+  --ion-background-color-step-950: color-mix(in oklab, var(--background), var(--foreground) 95%);
+  --ion-text-color-step-950: color-mix(in oklab, var(--foreground), var(--background) 95%);
+  --ion-background-color: var(--background);
+  --ion-background-color-rgb: 246, 243, 238;
+  --ion-text-color: var(--foreground);
+  --ion-text-color-rgb: 10, 6, 5;
+  --ion-border-color: var(--border);
+  --ion-item-background: var(--background);
+  --ion-toolbar-background: var(--background);
+  --ion-tab-bar-background: var(--background);
+  --ion-card-background: var(--card);
+}
+
+/* Cuando está en modo oscuro con la clase ion-palette-dark */
+.ion-palette-dark {
+  --ion-color-primary: var(--primary);
+  --ion-color-primary-rgb: 244, 159, 30;
+  --ion-color-primary-contrast: var(--primary-foreground);
+  --ion-color-primary-contrast-rgb: 68, 28, 6;
+  --ion-color-primary-shade: color-mix(in oklab, var(--primary), black 12%);
+  --ion-color-primary-tint: color-mix(in oklab, var(--primary), white 10%);
+
+  /* El resto de variables en modo oscuro... */
+  --ion-background-color: var(--background);
+  --ion-background-color-rgb: 10, 10, 10;
+  --ion-text-color: var(--foreground);
+  --ion-text-color-rgb: 250, 250, 250;
+  --ion-border-color: var(--border);
+  --ion-item-background: var(--card);
+  --ion-toolbar-background: var(--background);
+  --ion-tab-bar-background: var(--background);
+  --ion-card-background: var(--card);
+}
+
+/* Toasts: one quiet card surface, content width, never full-bleed. Only errors get a destructive border. */
+ion-toast,
+ion-toast.ion-color {
+  --background: var(--popover);
+  --color: var(--popover-foreground);
+  --border-width: 1px;
+  --border-style: solid;
+  --border-color: var(--border);
+  --border-radius: var(--radius-lg);
+  --box-shadow: none;
+  --width: fit-content;
+  --min-width: min(var(--container-xs), calc(100vw - var(--spacing) * 8));
+  --max-width: min(var(--container-md), calc(100vw - var(--spacing) * 8));
+  --button-color: var(--popover-foreground);
+  /* Ionic paints color="success|danger" from these (with !important), not from --background. */
+  --ion-color-base: var(--popover) !important;
+  --ion-color-contrast: var(--popover-foreground) !important;
+  --ion-color-shade: var(--popover) !important;
+  --ion-color-tint: var(--popover) !important;
+  font-size: var(--text-sm);
+}
+
+ion-toast.ion-color-danger {
+  --border-color: var(--destructive);
+}

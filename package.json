@@ -3,6 +3,10 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": "26.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "pnpm typecheck && vite build",
@@ -14,13 +18,13 @@
     "test.e2e.smoke": "playwright test --grep @smoke --project=chromium",
     "ui-review": "bash scripts/ui-review.sh"
   },
-  "engines": {
-    "node": "26.x"
-  },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@capacitor/core": "8.5.3",
+    "@capacitor/geolocation": "8.2.3",
     "@fontsource-variable/figtree": "^5.3.0",
+    "@ionic/react": "^9.0.10",
+    "@ionic/react-router": "^9.0.10",
     "@tailwindcss/vite": "^4.3.5",
     "@tanstack/react-query": "^5.106.1",
     "class-variance-authority": "^0.7.1",

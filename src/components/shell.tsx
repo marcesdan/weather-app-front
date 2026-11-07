@@ -1,21 +1,32 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { IonContent, IonPage, IonRefresher, IonRefresherContent } from "@ionic/react";
 import { ChevronLeft } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // v1 layout kept: one centered column, a three-slot header row (back · title · action), content, footer.
-export function Shell({ children, className }: { children: ReactNode; className?: string }) {
+// Ionic owns the page (transitions, safe areas, pull to refresh); the column inside is ours.
+export function Shell({ children, className, onRefresh }: { children: ReactNode; className?: string; onRefresh?: () => Promise<unknown> }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 pt-[max(env(safe-area-inset-top),0.75rem)]">
-      <main className={cn("flex-1", className)}>{children}</main>
+    <IonPage>
+      <IonContent>
+        {onRefresh && (
+          <IonRefresher slot="fixed" onIonRefresh={(e) => void onRefresh().finally(() => e.detail.complete())}>
+            <IonRefresherContent />
+          </IonRefresher>
+        )}
+        <div className="mx-auto flex min-h-full w-full max-w-xl flex-col px-4 pt-[max(env(safe-area-inset-top),0.75rem)]">
+          <main className={cn("flex-1", className)}>{children}</main>
       <footer className="py-6 text-center text-xs text-muted-foreground">
         Datos de OpenWeatherMap y Open-Meteo. Hecho por{" "}
         <a className="underline underline-offset-2 hover:text-foreground" href="https://github.com/marcesdan">
           Marces
         </a>
-      </footer>
-    </div>
+          </footer>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 }
 

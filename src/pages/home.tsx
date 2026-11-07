@@ -1,4 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, MapPin, Plus, Radar } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { HeaderRow, SectionTitle, Shell, Strip } from "@/components/shell";
@@ -11,6 +12,7 @@ import { evaluate } from "@/lib/alerts";
 
 export default function Home() {
   const here = useHere();
+  const qc = useQueryClient();
   const [unit] = usePref<WindUnit>("unit", "kn");
   const saved = usePlaces();
   // Location blocked and server down: fall back to the first saved place instead of a dead end.
@@ -22,7 +24,7 @@ export default function Home() {
   if (here.isError && !spot) return <Navigate to="/error" replace />;
 
   return (
-    <Shell>
+    <Shell onRefresh={() => qc.invalidateQueries()}>
       <HeaderRow
         action={
           <Link to={spot ? `/observatory?lat=${spot.lat.toFixed(3)}&lon=${spot.lon.toFixed(3)}` : "/observatory"} aria-label="Observatorio" className={buttonVariants({ variant: "ghost", size: "icon" })}>
