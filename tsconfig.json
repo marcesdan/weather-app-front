@@ -1,12 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2023", "WebWorker"],
     "skipLibCheck": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -14,18 +10,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["./src/*", "./dist/*", ""],
-      "components/*": ["./src/components/*"],
-      "hooks/*": ["./src/hooks/*"],
-      "pages/*": ["./src/pages/*"],
-      "store/*": ["./src/store/*"],
-      "services/*": ["./src/services/*"],
-      "utils/*": ["./src/utils/*"]
-    },
-    "types": ["jest", "node"]
+    "types": ["vite/client", "node"],
+    "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "e2e", "vite.config.ts", "playwright.config.ts", "capacitor.config.ts"]
 }

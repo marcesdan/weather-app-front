@@ -1,33 +1,31 @@
-import { useEffect } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { SkeletonTheme } from "react-loading-skeleton";
-import dayjs from "dayjs";
-import localizedFormat from "dayjs/plugin/localizedFormat";
-import "dayjs/locale/es";
-import "react-loading-skeleton/dist/skeleton.css";
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router-dom";
+import Home from "./pages/home";
+import NextDays from "./pages/next-days";
+import Cities from "./pages/cities";
+import { ErrorPage, NotFound } from "./pages/error";
+import { useAlertWatch } from "./lib/notify";
 
-import { RootLayout } from "@/components/layouts";
-import { Home, Error, NextDays, Cities } from "./pages";
-import { navigationService } from "@/utils";
-
-dayjs.extend(localizedFormat);
-dayjs.locale("es");
+// Leaflet and the map canvas only load when someone opens the observatory.
+const Observatory = lazy(() => import("./pages/observatory"));
 
 export default function App() {
-  const navigate = useNavigate();
-  useEffect(() => {
-    navigationService.setNavigate(navigate);
-  }, [navigate]);
+  useAlertWatch();
   return (
-    <SkeletonTheme baseColor="#b0d7fe" highlightColor="#c3e5fc">
-      <Routes>
-        <Route path="/" element={<RootLayout />}>
-          <Route index element={<Home />} />
-        </Route>
-        <Route path="/ciudades" element={<Cities />} />
-        <Route path="dias" element={<NextDays />} />
-        <Route path="/error" element={<Error />} />
-      </Routes>
-    </SkeletonTheme>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/dias" element={<NextDays />} />
+      <Route path="/ciudades" element={<Cities />} />
+      <Route
+        path="/observatory"
+        element={
+          <Suspense fallback={<p className="p-6 text-muted-foreground">Cargando el mapa…</p>}>
+            <Observatory />
+          </Suspense>
+        }
+      />
+      <Route path="/error" element={<ErrorPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }

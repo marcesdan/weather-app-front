@@ -1,22 +1,21 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { store, persistor } from "./store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@fontsource-variable/figtree";
+import "./styles/globals.css";
 import App from "./App";
-import { FullSizeLoader } from "@/components/atoms";
-import { GlobalStyles } from "./components/styles";
+import { mirrorForWorker } from "./lib/places";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <GlobalStyles />
-    <Provider store={store}>
-      <PersistGate loading={<FullSizeLoader />} persistor={persistor}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </PersistGate>
-    </Provider>
-  </React.StrictMode>
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 2, refetchOnWindowFocus: true } } });
+mirrorForWorker();
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
+  </StrictMode>,
 );

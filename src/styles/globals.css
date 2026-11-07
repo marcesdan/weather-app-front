@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./theme.css";
+
+/* Weather's knobs: Figtree like Marcesia (a utility, not Astropia's mystic serif). Radius stays the shared one. */
+:root {
+  --font-body: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+  /* Numbers line up and sit on the line: dates, times, codes, counts. */
+  .font-mono {
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  ::selection {
+    background-color: oklch(0.77 0.16 70 / 0.35);
+    color: inherit;
+  }
+}
+
+/* iOS zooms into any field under 16px, so fields keep 16 whatever the type scale says (PRODUCT.md Accessibility).
+   Unlayered on purpose: it must win over the text-* utilities. */
+input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select {
+  font-size: 16px;
+}
+/* Buttons keep the control sizes they had before the content scale went down a step: 14 and 16, not 12 and 14. */
+button.text-sm {
+  font-size: 14px;
+}
+button.text-base {
+  font-size: 16px;
+}
+
+/* Map chrome follows the app tokens, not Leaflet's defaults. */
+.leaflet-container {
+  background: var(--muted);
+  font-family: var(--font-sans);
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: color-mix(in oklch, var(--background) 85%, transparent) !important;
+  color: var(--foreground) !important;
+}
+.leaflet-control-attribution a {
+  color: var(--primary-ink);
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Cormorant defaults to old-style figures ("18" reads "I8"); temperatures need lining ones. */
+.font-display {
+  font-variant-numeric: lining-nums;
+}
+/* OSM tiles are loud; mute them so the weather layers read first. Dark mode inverts them. */
+.leaflet-tile-pane {
+  filter: grayscale(0.85) contrast(0.9) brightness(1.05);
+}
+.dark .leaflet-tile-pane {
+  filter: grayscale(0.9) invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9);
+}

@@ -30,3 +30,8 @@ build
 *.local
 
 .env
+
+dist
+test-results
+playwright-report
+.qa-shots
