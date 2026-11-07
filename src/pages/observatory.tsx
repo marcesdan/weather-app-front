@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BookmarkPlus, ChevronLeft, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,11 +57,9 @@ export default function Observatory() {
   return (
     <div className="flex h-dvh flex-col bg-background">
       <header className="flex items-center gap-2 border-b px-2 py-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
-        <Button asChild variant="ghost" size="icon" aria-label="Volver">
-          <Link to="/">
+        <Link to="/" aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <ChevronLeft className="size-5" />
           </Link>
-        </Button>
         <h1 className="flex-1 font-display font-semibold tracking-tight text-2xl leading-none">Observatorio</h1>
         <div role="radiogroup" aria-label="Unidad de viento" className="flex rounded-md border p-0.5 text-sm">
           {(["kn", "ms", "kmh"] as WindUnit[]).map((u) => (

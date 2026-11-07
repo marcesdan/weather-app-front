@@ -1,6 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { ChevronRight, MapPin, Plus, Radar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { HeaderRow, SectionTitle, Shell, Strip } from "@/components/shell";
 import { Hero, HourCell, PlaceCard } from "@/components/weather";
 import { useHere, usePointForecast, useWeather } from "@/lib/queries";
@@ -25,11 +25,9 @@ export default function Home() {
     <Shell>
       <HeaderRow
         action={
-          <Button asChild variant="ghost" size="icon" aria-label="Observatorio">
-            <Link to={spot ? `/observatory?lat=${spot.lat.toFixed(3)}&lon=${spot.lon.toFixed(3)}` : "/observatory"}>
+          <Link to={spot ? `/observatory?lat=${spot.lat.toFixed(3)}&lon=${spot.lon.toFixed(3)}` : "/observatory"} aria-label="Observatorio" className={buttonVariants({ variant: "ghost", size: "icon" })}>
               <Radar className="size-5" />
             </Link>
-          </Button>
         }
       >
         {spot ? (
@@ -83,11 +81,9 @@ function OtherPlaces({ unit }: { unit: WindUnit }) {
     <>
       <SectionTitle
         action={
-          <Button asChild variant="outline" size="sm">
-            <Link to="/ciudades">
+          <Link to="/ciudades" className={buttonVariants({ variant: "outline", size: "sm" })}>
               <Plus /> Agregar
             </Link>
-          </Button>
         }
       >
         Otras ciudades

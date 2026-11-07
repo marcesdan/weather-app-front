@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // v1 layout kept: one centered column, a three-slot header row (back · title · action), content, footer.
@@ -23,11 +23,9 @@ export function HeaderRow({ back, children, action }: { back?: string; children:
   return (
     <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2 py-2">
       {back ? (
-        <Button asChild variant="ghost" size="icon" aria-label="Volver">
-          <Link to={back}>
+        <Link to={back} aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <ChevronLeft className="size-5" />
           </Link>
-        </Button>
       ) : (
         <span />
       )}
