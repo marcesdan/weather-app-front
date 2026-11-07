@@ -43,3 +43,20 @@ test("observatory: layers, time slider, point forecast and a named zone", { tag:
   await expect(page.getByTestId("point-panel")).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("going back from the observatory leaves no errors (Ionic keeps the page cached at size 0)", async ({ page, errors }) => {
+  await mockNetwork(page);
+  await page.goto("/");
+  await page.getByRole("link", { name: "Observatorio" }).click();
+  await expect(page.getByTestId("map")).toBeVisible();
+  await expect(page.getByTestId("hour-label")).toContainText("(ahora)"); // field loaded, layers drawing
+  await page.getByRole("link", { name: "Volver" }).last().click();
+  await expect(page.getByTestId("here-name")).toBeVisible();
+  await page.waitForTimeout(1000);
+
+  // Coming back to the cached page resumes drawing at full size.
+  await page.getByRole("link", { name: "Observatorio" }).click();
+  await expect(page.getByTestId("map")).toBeVisible();
+  await expect.poll(() => page.locator("canvas").first().evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});

@@ -72,6 +72,8 @@ export function drawHeat(ctx: CanvasRenderingContext2D, map: LeafletMap, f: Fiel
   const values = f.atmo.map((_, i) => spec.get(f, i, hour));
   const w = Math.ceil(width / dpr / step);
   const h = Math.ceil(height / dpr / step);
+  // Ionic keeps a left page mounted but hidden (size 0); there is nothing to paint until it shows again.
+  if (!w || !h) return;
   low!.width = w;
   low!.height = h;
   const lc = low!.getContext("2d")!;
@@ -164,6 +166,8 @@ export function startParticles(ctx: CanvasRenderingContext2D, map: LeafletMap, g
 
   const restart = () => {
     cancelAnimationFrame(raf);
+    // Hidden page in Ionic's stack: no animation loop until it is visible again (resize brings it back).
+    if (!ctx.canvas.width || !ctx.canvas.height) return;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ps = [];
     if (still) drawStill();
