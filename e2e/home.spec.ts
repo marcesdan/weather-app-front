@@ -17,18 +17,16 @@ test.describe("with GPS at sea", () => {
     // No minute nowcast here (empty, like Argentina): Open-Meteo's 15-minute steps fill in.
     await expect(page.getByTestId("rain-soon")).toContainText(/Llueve en \d+ min/);
     // Sunrise and sunset in the place's own time zone (fixture: Europe/London).
-    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Sol\s*\d{1,2}:\d{2}\s*se pone \d{1,2}:\d{2}/);
+    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Sol\s*\d{1,2}:\d{2}\s*hasta \d{1,2}:\d{2}/);
+    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Viento\s*\d+ km\/h\s*del [NSEO]+/);
     expect(errors).toEqual([]);
   });
 
-  test("next days lists seven days with min and max", async ({ page }) => {
+  test("the week is on home; a day opens hour by hour in place", async ({ page }) => {
     await mockNetwork(page);
     await page.goto("/");
-    await page.getByRole("link", { name: /Próximos 7 días/ }).click();
-    await expect(page).toHaveURL(/\/dias$/);
     const days = screen(page).getByTestId("days");
     await expect(days.locator("[data-slot=accordion-trigger]")).toHaveCount(7);
-    // A day opens in place, hour by hour (Open-Meteo), without leaving the page.
     await days.locator("[data-slot=accordion-trigger]").first().click();
     await expect(days.getByRole("list", { name: /Hora a hora/ }).getByRole("listitem").first()).toBeVisible();
   });

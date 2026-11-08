@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { IonContent, IonPage, IonRefresher, IonRefresherContent, useIonRouter } from "@ionic/react";
 import { ChevronLeft } from "lucide-react";
@@ -85,14 +85,40 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
   );
 }
 
+// Mouse users drag the strip sideways (touch and trackpads scroll natively); a drag never fires the click under it.
+function useDragScroll() {
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef({ x: 0, left: 0, moved: false, active: false });
+  return {
+    ref,
+    onPointerDown: (e: React.PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0 || !ref.current) return;
+      drag.current = { x: e.clientX, left: ref.current.scrollLeft, moved: false, active: true };
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      const d = drag.current;
+      if (!d.active || !ref.current) return;
+      const dx = e.clientX - d.x;
+      if (Math.abs(dx) > 4) d.moved = true;
+      ref.current.scrollLeft = d.left - dx;
+    },
+    onPointerUp: () => void (drag.current.active = false),
+    onPointerLeave: () => void (drag.current.active = false),
+    onClickCapture: (e: React.MouseEvent) => {
+      if (drag.current.moved) e.stopPropagation(), e.preventDefault(), (drag.current.moved = false);
+    },
+  };
+}
+
 export function Strip({ children, label, className }: { children: ReactNode; label: string; className?: string }) {
   return (
     // Bleeds past the column padding to the screen edge, like a carousel: the cut item at the edge says "swipe".
     // The trailing spacer keeps the last item off the edge (end padding is dropped in some scroll containers).
     <div
+      {...useDragScroll()}
       role="list"
       aria-label={label}
-      className={cn("no-scrollbar -mx-4 flex snap-x scroll-px-4 select-none gap-1.5 overflow-x-auto px-4 py-1 after:w-2 after:shrink-0 after:content-['']", className)}
+      className={cn("strip -mx-4 flex snap-x scroll-px-4 select-none gap-1.5 overflow-x-auto px-4 py-1 after:w-2 after:shrink-0 after:content-['']", className)}
     >
       {children}
     </div>

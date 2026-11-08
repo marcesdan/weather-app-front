@@ -136,3 +136,13 @@ body:has(.sky-backdrop) {
 @media (prefers-reduced-motion: reduce) {
   .wi-spin, .wi-float, .wi-drop, .wi-flake, .wi-bolt, .wi-drift, .rise { animation: none; }
 }
+
+/* Strips: no scrollbar on touch (the cut item says "swipe"); a thin one with a mouse, as a second cue. */
+.strip { scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+@media (pointer: fine) {
+  .strip { scrollbar-width: thin; scrollbar-color: oklch(1 0 0 / 0.3) transparent; cursor: grab; }
+  .strip:active { cursor: grabbing; }
+  .strip::-webkit-scrollbar { display: block; height: 6px; }
+  .strip::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.3); border-radius: 3px; }
+}

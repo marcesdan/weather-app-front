@@ -1,9 +1,8 @@
 import { lazy, Suspense } from "react";
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 import { createAnimation, IonApp, IonRouterOutlet, setupIonicReact, type AnimationBuilder } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import Home from "./pages/home";
-import NextDays from "./pages/next-days";
 import Cities from "./pages/cities";
 import Settings from "./pages/settings";
 import { ErrorPage, NotFound } from "./pages/error";
@@ -33,7 +32,8 @@ export default function App() {
         <IonRouterOutlet animation={fadeThrough}>
           <Route path="/" element={<Home />} />
           <Route path="/lugar/:id" element={<Home />} />
-          <Route path="/dias" element={<NextDays />} />
+          {/* The week now lives on the home screen; old links land there. */}
+          <Route path="/dias" element={<Navigate to="/" replace />} />
           <Route path="/ajustes" element={<Settings />} />
           <Route path="/ciudades" element={<Cities />} />
           <Route

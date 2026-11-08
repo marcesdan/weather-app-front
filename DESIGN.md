@@ -48,9 +48,11 @@ Keeps its own opaque surface and map; the sky is hidden there. Data colours neve
 
 ## Home content
 
-- Facts row: rain chance, humidity, wind (speed, compass under it), sun (sunrise, sunset under it) in the place's time zone. Air quality was tried there and dropped: it read as noise.
-- Phone: one column, hours as an edge-to-edge swipe band. From sm the band is a rounded panel; from md the hours are an 8-column grid (no sideways scroll with a mouse). Desktop (lg): two columns, the reading sticky on the left, hours, the 7-day list and other places on the right.
-- Próximos días: each day is an accordion row that opens hour by hour in place (Open-Meteo hourly, WMO codes mapped to our icons in `wmo.ts`; One Call only covers 48 h).
+- One column at every size (max-w-3xl on desktop). Order: place, reading, facts, the next-24 h sentence, "llueve en X min" when it applies, hours, the week, other places. Two-column desktop layouts were tried and dropped.
+- Facts row: four cells, each label / value / note on shared rows (`grid-rows-subgrid`), no label icons. Lluvia (próxima hora), Humedad (rocío), Viento (speed; note = arrow + "del OSO"), Sol (sunrise; note = "hasta" sunset).
+- Wind direction everywhere: `WindArrow` is a stroked arrow in a ring pointing where the wind blows TO; the words say where it comes FROM ("del OSO"). One speed per place it appears; gusts live in the sentence and the observatory.
+- Hours: one row that scrolls sideways at every size (edge-to-edge band on phones, rounded panel from sm). Mouse users can drag it; a thin scrollbar shows on fine pointers.
+- The week: one line per day at every width (day, icon with rain % when ≥ 20%, min, week-scaled bar, max); tapping opens that day hour by hour in place (Open-Meteo hourly, WMO codes mapped in `wmo.ts`). `/dias` redirects home.
 - Toggle groups keep a small gap between items (`spacing={0.5}`): spacing 0 is shadcn's segmented style and squares the inner items.
 - "Llueve en X min" card only when rain is coming or falling: OpenWeatherMap 1-minute nowcast where it exists, Open-Meteo 15-minute steps elsewhere (Argentina). Rain-radar blue bars.
 - Saved places open their own weather at `/lugar/:id` (same layout, sky of that place). Units (°C/°F; km/h, m/s, kn, mph) live in Ajustes. Alerts are per place: the bell in Ciudades.

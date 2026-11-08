@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
-import { Droplets, Navigation2, Sunrise, Umbrella, Undo2 } from "lucide-react";
+import { CircleArrowUp, Undo2 } from "lucide-react";
 import type { OneCall } from "@/lib/api";
 import { capitalize, compass, deg, fmtHour, fmtTime, fmtWind, nextDay, pct, type Units } from "@/lib/format";
 import type { Alert } from "@/lib/alerts";
 import { ConditionIcon } from "./condition-icon";
 import { cn } from "@/lib/utils";
 
-// Arrow points where the wind blows TO, so it is rotated 180° from the "from" direction.
+// Points where the wind blows TO (rotated 180° from the meteorological "from" degree). A stroked arrow in a ring
+// keeps a readable tip at 12-16 px and a square box whatever the angle, so it never knocks the line out of true.
+// Text next to it says where it comes FROM ("del OSO"): arrow = to, words = from.
 export function WindArrow({ deg, className }: { deg: number; className?: string }) {
-  return <Navigation2 aria-hidden className={cn("size-3.5 fill-current", className)} style={{ rotate: `${deg + 180}deg` }} />;
+  return <CircleArrowUp aria-hidden strokeWidth={2} className={cn("size-3.5 shrink-0", className)} style={{ transform: `rotate(${deg + 180}deg)` }} />;
 }
 
 // The reading sits on the sky itself, no card: the sky behind it is the picture of this same state.
@@ -40,21 +42,21 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: Units; hour: 
       <p className="text-base text-muted-foreground tabular-nums">
         Máx {deg(today.temp.max, unit)} · Mín {deg(today.temp.min, unit)} · Sensación {deg(s.feels_like, unit)}
       </p>
-      <dl className="glass mx-auto mt-5 grid max-w-md grid-cols-4 divide-x divide-border rounded-2xl py-2.5 text-sm">
-        <Fact icon={<Umbrella className="size-4" />} label="Lluvia" value={pct(h ? h.pop : (w.hourly[0]?.pop ?? 0))} />
-        <Fact icon={<Droplets className="size-4" />} label="Humedad" value={`${s.humidity}%`} />
+      {/* Every cell is label / value / note on shared rows (subgrid), so all four lines sit on one baseline. */}
+      <dl className="glass mx-auto mt-5 grid max-w-md grid-cols-4 grid-rows-[auto_auto_auto] divide-x divide-border rounded-2xl py-2.5 text-sm">
+        <Fact label="Lluvia" value={pct(h ? h.pop : (w.hourly[0]?.pop ?? 0))} sub={h ? "esa hora" : "próxima hora"} />
+        <Fact label="Humedad" value={`${s.humidity}%`} sub={`rocío ${deg(s.dew_point, unit)}`} />
         <Fact
-          icon={<WindArrow deg={s.wind_deg} className="size-4" />}
           label="Viento"
           value={fmtWind(s.wind_speed, unit.wind)}
-          sub={compass(s.wind_deg)}
+          sub={
+            <span className="inline-flex items-center gap-1">
+              <WindArrow deg={s.wind_deg} />
+              del {compass(s.wind_deg)}
+            </span>
+          }
         />
-        <Fact
-          icon={<Sunrise className="size-4" />}
-          label="Sol"
-          value={fmtTime(today.sunrise, w.timezone)}
-          sub={`se pone ${fmtTime(today.sunset, w.timezone)}`}
-        />
+        <Fact label="Sol" value={fmtTime(today.sunrise, w.timezone)} sub={`hasta ${fmtTime(today.sunset, w.timezone)}`} />
       </dl>
       {/* Stays in the layout while an hour is picked, so the strip below never jumps. */}
       <p className={cn("mx-auto mt-4 max-w-sm text-sm text-balance transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
@@ -64,15 +66,12 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: Units; hour: 
   );
 }
 
-function Fact({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+function Fact({ label, value, sub }: { label: string; value: string; sub: React.ReactNode }) {
   return (
-    <div className="px-2">
-      <dt className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-        {icon}
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-base font-semibold whitespace-nowrap tabular-nums">{value}</dd>
-      {sub && <dd className="text-sm whitespace-nowrap text-muted-foreground">{sub}</dd>}
+    <div className="row-span-3 grid grid-rows-subgrid gap-0.5 px-1">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-base font-semibold whitespace-nowrap tabular-nums">{value}</dd>
+      <dd className="text-sm whitespace-nowrap text-muted-foreground">{sub}</dd>
     </div>
   );
 }
@@ -81,13 +80,13 @@ function Fact({ icon, label, value, sub }: { icon: React.ReactNode; label: strin
 export function HourCell({ h, tz, selected, onPick, unit }: { h: OneCall["hourly"][number]; tz: string; selected: boolean; onPick: () => void; unit: Units }) {
   const cond = h.weather[0];
   return (
-    <div role="listitem" className="shrink-0 snap-start md:shrink">
+    <div role="listitem" className="shrink-0 snap-start">
     <button
       aria-pressed={selected}
       aria-label={`${fmtHour(h.dt, tz)}: ${deg(h.temp, unit)}, ${cond?.description}, lluvia ${pct(h.pop)}`}
       onClick={onPick}
       className={cn(
-        "flex w-14 flex-col md:w-full items-center gap-1.5 rounded-xl py-2.5 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
+        "flex w-14 flex-col items-center gap-1.5 rounded-xl py-2.5 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
         selected ? "bg-primary/90 text-primary-foreground [text-shadow:none]" : "hover:bg-accent",
       )}
     >
@@ -117,11 +116,11 @@ export function PlaceCard({
 }) {
   const cond = w?.current.weather[0];
   return (
-    <div role="listitem" className="shrink-0 snap-start md:shrink">
+    <div role="listitem" className="shrink-0 snap-start">
     <Link
       to={to}
       data-testid="place-card"
-      className="glass flex h-full w-40 flex-col md:w-full gap-2 rounded-2xl p-3 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/60"
+      className="glass flex h-full w-40 flex-col gap-2 rounded-2xl p-3 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/60"
     >
       <span className="truncate text-base font-semibold" title={name}>
         {name}

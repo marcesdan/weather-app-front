@@ -3,7 +3,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ConditionIcon } from "./condition-icon";
 import { WindArrow } from "./weather";
 import type { OneCall } from "@/lib/api";
-import { capitalize, deg, fmtHour, fmtWeekday, fmtWind, fromMs, pct, type Units } from "@/lib/format";
+import { deg, fmtHour, fmtWeekday, fromMs, pct, type Units } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { fetchWeekHours, type HourRow } from "@/lib/openmeteo";
 import { coordKey } from "@/lib/places";
 import { wmo } from "@/lib/wmo";
@@ -35,26 +36,25 @@ export function DayList({ w, lat, lon, unit }: { w: OneCall; lat: number; lon: n
         const list = byDay.get(dayKey(d.dt, w.timezone)) ?? [];
         return (
           <AccordionItem key={d.dt} value={d.dt} className="border-border">
-            <AccordionTrigger className="items-center gap-3 px-4 py-3 text-base font-normal hover:no-underline">
-              <span className="w-10 shrink-0 font-semibold">{fmtWeekday(d.dt, w.timezone)}</span>
-              <ConditionIcon code={cond?.icon} label={cond?.description} className="size-8 shrink-0" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate">{capitalize(cond?.description ?? "")}</span>
-                <span className="flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
-                  <WindArrow deg={d.wind_deg} /> {fmtWind(d.wind_speed, unit.wind)}
-                  {d.wind_gust ? <span className="hidden sm:inline">, ráfagas {fmtWind(d.wind_gust, unit.wind)}</span> : null} · {pct(d.pop)} lluvia
-                </span>
+            {/* One line at every width: day, icon with rain chance, min, the week-scaled bar, max. Wind lives in
+                the hour-by-hour view (an arrow per hour), never as a second speed here. */}
+            <AccordionTrigger
+              className="grid grid-cols-[2.75rem_2.75rem_2.25rem_minmax(0,1fr)_2.25rem_1rem] items-center gap-2 px-4 py-2.5 text-base font-normal hover:no-underline"
+              aria-label={`${fmtWeekday(d.dt, w.timezone)}: ${cond?.description}, mínima ${deg(d.temp.min, unit)}, máxima ${deg(d.temp.max, unit)}, lluvia ${pct(d.pop)}`}
+            >
+              <span className="font-semibold">{fmtWeekday(d.dt, w.timezone)}</span>
+              <span className="flex flex-col items-center">
+                <ConditionIcon code={cond?.icon} className="size-7" />
+                <span className={cn("text-xs leading-none tabular-nums text-[oklch(0.86_0.09_235)]", d.pop < 0.2 && "invisible")}>{pct(d.pop)}</span>
               </span>
-              <span className="flex shrink-0 items-center gap-2 tabular-nums">
-                <span className="text-muted-foreground">{deg(d.temp.min, unit)}</span>
-                <span className="relative hidden h-1.5 w-20 rounded-full bg-muted sm:block" aria-hidden>
-                  <span
-                    className="absolute inset-y-0 rounded-full bg-[linear-gradient(to_right,oklch(0.75_0.12_230),oklch(0.83_0.15_80))]"
-                    style={{ left: `${((d.temp.min - lo) / (hi - lo || 1)) * 100}%`, right: `${((hi - d.temp.max) / (hi - lo || 1)) * 100}%` }}
-                  />
-                </span>
-                <span className="font-semibold">{deg(d.temp.max, unit)}</span>
+              <span className="text-right text-muted-foreground tabular-nums">{deg(d.temp.min, unit)}</span>
+              <span className="relative h-1.5 rounded-full bg-muted" aria-hidden>
+                <span
+                  className="absolute inset-y-0 rounded-full bg-[linear-gradient(to_right,oklch(0.75_0.12_230),oklch(0.83_0.15_80))]"
+                  style={{ left: `${((d.temp.min - lo) / (hi - lo || 1)) * 100}%`, right: `${((hi - d.temp.max) / (hi - lo || 1)) * 100}%` }}
+                />
               </span>
+              <span className="font-semibold tabular-nums">{deg(d.temp.max, unit)}</span>
             </AccordionTrigger>
             <AccordionContent className="px-2">
               {list.length ? (
