@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleArrowUp, Undo2 } from "lucide-react";
+import { CircleArrowUp } from "lucide-react";
 import type { OneCall } from "@/lib/api";
 import { capitalize, compass, deg, fmtHour, fmtTime, fmtWind, nextDay, pct, rainSoon, windFrom, type RainPoint, type Units } from "@/lib/format";
 import type { Alert } from "@/lib/alerts";
@@ -14,7 +14,7 @@ export function WindArrow({ deg, className }: { deg: number; className?: string 
 }
 
 // The reading sits on the sky itself, no card: the sky behind it is the picture of this same state.
-export function Hero({ w, unit, hour, onNow, soon }: { w: OneCall; unit: Units; hour: number | null; onNow: () => void; soon?: RainPoint[] }) {
+export function Hero({ w, unit, hour, soon }: { w: OneCall; unit: Units; hour: number | null; soon?: RainPoint[] }) {
   const h = hour == null ? null : w.hourly[hour];
   const s = h ?? w.current;
   const cond = s.weather[0];
@@ -24,18 +24,7 @@ export function Hero({ w, unit, hour, onNow, soon }: { w: OneCall; unit: Units; 
       <p className="sr-only" aria-live="polite">
         {h ? `Mostrando las ${fmtHour(h.dt, w.timezone)}` : ""}
       </p>
-      {/* The sky behind is the condition; this slot only holds the way back from a picked hour. */}
-      <div className="flex h-7 items-center justify-center">
-        {h && (
-          <button
-            onClick={onNow}
-            className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60"
-          >
-            A las {fmtHour(h.dt, w.timezone)} <Undo2 aria-hidden className="size-3.5" /> <span className="sr-only">Volver a</span> ahora
-          </button>
-        )}
-      </div>
-      <p className="mt-1 text-[3.5rem] leading-none font-extralight tracking-[-0.03em] tabular-nums" data-testid="current-temp">
+      <p className="text-[3.5rem] leading-none font-extralight tracking-[-0.03em] tabular-nums" data-testid="current-temp">
         {deg(s.temp, unit)}
       </p>
       <p className="mt-2 text-xl font-medium">{capitalize(cond?.description ?? "")}</p>
@@ -53,9 +42,11 @@ export function Hero({ w, unit, hour, onNow, soon }: { w: OneCall; unit: Units; 
         />
         <Fact label="Sol" value={fmtTime(today.sunrise, w.timezone)} sub={`hasta ${fmtTime(today.sunset, w.timezone)}`} />
       </dl>
-      {/* Stays in the layout while an hour is picked, so the strip below never jumps. */}
-      <p className={cn("mx-auto mt-3 max-w-sm text-sm text-balance transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
-        {nextDay(w.hourly, w.timezone, unit)}
+      {/* The sentence describes what is on screen: the next 24 h, or the picked hour (same line, no jump). */}
+      <p className="mx-auto mt-3 max-w-sm text-sm text-balance">
+        {h
+          ? `A las ${fmtHour(h.dt, w.timezone)}: ${cond?.description ?? ""}, ${pct(h.pop)} de lluvia, viento ${fmtWind(h.wind_speed, unit.wind)} del ${windFrom(h.wind_deg).toLowerCase()}.`
+          : nextDay(w.hourly, w.timezone, unit)}
       </p>
     </section>
   );

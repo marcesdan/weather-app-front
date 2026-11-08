@@ -58,7 +58,7 @@ test.describe("the sky", () => {
     await hours.nth(2).click();
     await expect(hours.nth(2)).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("region", { name: /Pronóstico a las/ })).toBeVisible();
-    await page.getByRole("button", { name: /ahora/ }).click();
+    await page.getByRole("button", { name: "Volver a ahora" }).click();
     await expect(page.getByRole("region", { name: "Ahora" })).toBeVisible();
     // The sky is hidden on the observatory and comes back at full size.
     await page.getByRole("link", { name: "Observatorio" }).click();

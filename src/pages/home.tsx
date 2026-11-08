@@ -1,6 +1,6 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus, Radar, Settings2 } from "lucide-react";
+import { MapPin, Plus, Radar, Settings2, Undo2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { BackLink, HeaderRow, SectionTitle, Shell, Strip } from "@/components/shell";
 import { Hero, HourCell, PlaceCard } from "@/components/weather";
@@ -64,14 +64,25 @@ export default function Home() {
       </HeaderRow>
 
       {w ? (
-        <Hero w={w} unit={unit} hour={hour} onNow={() => skyHour.set(null)} soon={soon?.points} />
+        <Hero w={w} unit={unit} hour={hour} soon={soon?.points} />
       ) : weather.isError ? (
         <Retry onRetry={() => weather.refetch()} />
       ) : (
         <div className="mx-auto mt-6 h-56 max-w-sm animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" aria-label="Cargando el clima" />
       )}
 
-      <SectionTitle>Próximas horas</SectionTitle>
+      <SectionTitle
+        action={
+          hour != null && (
+            // The way back from a picked hour sits with the hours, not in the reading.
+            <Button variant="outline" size="sm" onClick={() => skyHour.set(null)}>
+              <Undo2 /> Volver a ahora
+            </Button>
+          )
+        }
+      >
+        Próximas horas
+      </SectionTitle>
       {w ? (
         // One row that scrolls sideways at every size: edge-to-edge on phones, a rounded panel from sm.
         <div className="glass -mx-4 rounded-none border-x-0 py-1 sm:mx-0 sm:rounded-2xl sm:border-x">
