@@ -8,6 +8,7 @@ The sky behind the app is the forecast. Shared tokens come from the `marces-them
 - Driven only by OpenWeatherMap's typed state (`skyFrom`): sun height from sunrise/sunset with twilight and a golden-hour glow; cloud cover from `clouds`; rain (drizzle 3xx, rain 5xx by intensity), snow 6xx, storm 2xx with lightning lighting the clouds, fog/mist 7xx; clouds, rain angle and snow drift follow the real wind vector.
 - Rain is calm and physical: 7 rows per screen, fall speed 0.45 (drizzle) to 1.0 (heavy) screen-heights per second (+0.15 in storms), streaks 2.5–6% of the screen with a bright head and fading tail, 18/26/34 sparse columns, at least one canvas pixel wide, per-streak alpha 0.08–0.24, total mix capped at 0.3, thinned 55% across the hero band. Every term scales with intensity. Never use `smoothstep` with reversed edges in GLSL (undefined); write `1.0 - smoothstep(lo, hi, x)`.
 - Picking an hour in the home strip turns the sky into that hour; "Ahora" returns. Changes ease over 1.2 s.
+- Night clouds barely catch light (lit ≈ 0.15–0.22): a night sky must read as night. While the first forecast loads, the sky is plain day or night by the device clock, never a fixed dusk.
 - Sun rises at the sides and passes above the top edge at noon so its glow frames the reading; the moon keeps to the upper right.
 - Legibility is part of the sky: day exposure is held at 0.8 and overcast/fog/snow decks are darkened so white small text keeps ≥ 4.5:1 on open sky (measured: overcast 5.5, clear 4.8). Re-measure after any palette change.
 - Performance: drawn at 0.6× CSS size, low-power context; the loop stops at 0×0 (Ionic's hidden pages, the observatory), with the tab hidden, and after one frame under reduced motion.
@@ -49,8 +50,10 @@ Keeps its own opaque surface and map; the sky is hidden there. Data colours neve
 ## Home content
 
 - One column at every size (max-w-3xl on desktop). Order: place, reading, facts, the next-24 h sentence, "llueve en X min" when it applies, hours, the week, other places. Two-column desktop layouts were tried and dropped.
-- Facts row: four cells, each label / value / note on shared rows (`grid-rows-subgrid`), no label icons. Lluvia (próxima hora), Humedad (rocío), Viento (speed; note = arrow + "del OSO"), Sol (sunrise; note = "hasta" sunset).
-- Wind direction everywhere: `WindArrow` is a stroked arrow in a ring pointing where the wind blows TO; the words say where it comes FROM ("del OSO"). One speed per place it appears; gusts live in the sentence and the observatory.
+- No condition icon in the hero: the sky is the condition. Temperature 3.5 rem, extra-light.
+- Facts row: four cells, each label / value / note on shared rows (`grid-rows-subgrid`), no label icons. Lluvia: chance for the next hour; the note carries the nowcast as an exact time ("llueve 23:12", "para 23:40"), else "próxima hora", or "a las 16 h" for a picked hour. Humedad (rocío), Viento (speed; note = where it comes from in words, "Sudoeste"), Sol (sunrise; note = "hasta" sunset). No separate nowcast widget.
+- Wind outside the observatory is speed plus origin in words (meteorology names the origin; the destination is the opposite and never needs saying). No direction glyphs on home; the observatory keeps its arrows for sailors.
+- Hours show rain chance (rain blue from 30%) and wind speed. Week hours open a popover (shadcn) with condition, rain and wind origin.
 - Hours: one row that scrolls sideways at every size (edge-to-edge band on phones, rounded panel from sm). Mouse users can drag it; a thin scrollbar shows on fine pointers.
 - The week: one line per day at every width (day, icon with rain % when ≥ 20%, min, week-scaled bar, max); tapping opens that day hour by hour in place (Open-Meteo hourly, WMO codes mapped in `wmo.ts`). `/dias` redirects home.
 - Toggle groups keep a small gap between items (`spacing={0.5}`): spacing 0 is shadcn's segmented style and squares the inner items.

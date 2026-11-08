@@ -14,11 +14,11 @@ test.describe("with GPS at sea", () => {
     const hours = page.getByRole("list", { name: "Próximas horas" }).getByRole("listitem");
     await expect(hours).toHaveCount(24);
     await expect(hours.first()).toContainText("60%"); // v1 floored pop and always showed 0%
-    // No minute nowcast here (empty, like Argentina): Open-Meteo's 15-minute steps fill in.
-    await expect(page.getByTestId("rain-soon")).toContainText(/Llueve en \d+ min/);
+    // No minute nowcast here (empty, like Argentina): Open-Meteo's 15-minute steps give the exact start time.
+    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Lluvia\s*\d+%\s*llueve \d{1,2}:\d{2}/);
     // Sunrise and sunset in the place's own time zone (fixture: Europe/London).
     await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Sol\s*\d{1,2}:\d{2}\s*hasta \d{1,2}:\d{2}/);
-    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Viento\s*\d+ km\/h\s*del [NSEO]+/);
+    await expect(page.getByRole("region", { name: "Ahora" })).toContainText(/Viento\s*\d+ km\/h\s*(Norte|Noreste|Este|Sudeste|Sur|Sudoeste|Oeste|Noroeste)/);
     expect(errors).toEqual([]);
   });
 

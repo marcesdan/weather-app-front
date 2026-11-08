@@ -52,6 +52,10 @@ export const BEAUFORT_NAME = [
 
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
 // Meteorological direction: where the wind (or swell) comes FROM.
+// Where the wind comes from, in words, 8 points ("Sudoeste"). Meteorology always names the origin: a west wind
+// blows toward the east, so the destination never needs saying.
+const FROM = ["Norte", "Noreste", "Este", "Sudeste", "Sur", "Sudoeste", "Oeste", "Noroeste"];
+export const windFrom = (deg: number) => FROM[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 export const compass = (deg: number) => COMPASS[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
 
 type HourLike = { dt: number; temp: number; pop: number; wind_gust?: number; wind_speed: number };
@@ -75,14 +79,10 @@ export function nextDay(hours: HourLike[], tz: string, unit: Units): string {
 
 export type RainPoint = { dt: number; precipitation: number }; // mm/h
 const WET = 0.1; // mm/h: below this it is not raining
-// "Llueve en 12 min" / "Llueve ahora, para en unos 25 min" / null when the window stays dry.
-export function rainSoon(points: RainPoint[], now = Date.now() / 1000): string | null {
+// When rain starts (or stops, if it is raining now) inside the nowcast window; null when the window stays dry.
+export function rainSoon(points: RainPoint[], now = Date.now() / 1000): { raining: boolean; at: number | null } | null {
   const ahead = points.filter((p) => p.dt >= now - 60);
   if (!ahead.some((p) => p.precipitation >= WET)) return null;
-  const mins = (dt: number) => Math.max(1, Math.round((dt - now) / 60));
-  if (ahead[0].precipitation >= WET) {
-    const stop = ahead.find((p) => p.precipitation < WET);
-    return stop ? `Llueve ahora, para en unos ${mins(stop.dt)} min` : "Llueve ahora y sigue un buen rato";
-  }
-  return `Llueve en ${mins(ahead.find((p) => p.precipitation >= WET)!.dt)} min`;
+  if (ahead[0].precipitation >= WET) return { raining: true, at: ahead.find((p) => p.precipitation < WET)?.dt ?? null };
+  return { raining: false, at: ahead.find((p) => p.precipitation >= WET)!.dt };
 }

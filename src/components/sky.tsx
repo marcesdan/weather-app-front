@@ -21,8 +21,10 @@ export const skyHour = {
 };
 export const useSkyHour = () => useSyncExternalStore(skyHour.subscribe, skyHour.get, () => null);
 
-// A calm dusk while the first forecast loads, so the sky never flashes a wrong state.
-const WAITING: Sky = { day: 0.35, golden: 0.4, sunX: 0.8, sunY: 0.1, cloud: 0.3, rain: 0, snow: 0, storm: 0, fog: 0, windX: 2, windY: 0 };
+// While the first forecast loads: a plain day or night sky by the device clock, half cloudy, no warm tint
+// (a fixed dusk read as a brown night until the data arrived).
+const localHour = new Date().getHours();
+const WAITING: Sky = { day: localHour >= 7 && localHour < 20 ? 1 : 0, golden: 0, sunX: 0.5, sunY: 0.75, cloud: 0.5, rain: 0, snow: 0, storm: 0, fog: 0, windX: 2, windY: 0 };
 
 export function SkyLayer() {
   const canvas = useRef<HTMLCanvasElement>(null);

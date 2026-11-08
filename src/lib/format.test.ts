@@ -53,8 +53,9 @@ describe("rain soon", () => {
   const now = 1_800_000_000;
   const at = (min: number, mm: number) => ({ dt: now + min * 60, precipitation: mm });
   it("says when it starts, when it stops, or nothing when dry", () => {
-    expect(rainSoon([at(0, 0), at(5, 0), at(12, 0.8)], now)).toBe("Llueve en 12 min");
-    expect(rainSoon([at(0, 1.2), at(15, 0.5), at(30, 0)], now)).toBe("Llueve ahora, para en unos 30 min");
+    expect(rainSoon([at(0, 0), at(5, 0), at(12, 0.8)], now)).toEqual({ raining: false, at: now + 12 * 60 });
+    expect(rainSoon([at(0, 1.2), at(15, 0.5), at(30, 0)], now)).toEqual({ raining: true, at: now + 30 * 60 });
+    expect(rainSoon([at(0, 1.2), at(15, 0.5)], now)).toEqual({ raining: true, at: null });
     expect(rainSoon([at(0, 0), at(15, 0.05)], now)).toBeNull();
   });
 });

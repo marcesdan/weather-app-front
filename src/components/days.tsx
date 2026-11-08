@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ConditionIcon } from "./condition-icon";
-import { WindArrow } from "./weather";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { OneCall } from "@/lib/api";
-import { deg, fmtHour, fmtWeekday, fromMs, pct, type Units } from "@/lib/format";
+import { deg, fmtHour, fmtWeekday, fmtWind, pct, windFrom, type Units } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { fetchWeekHours, type HourRow } from "@/lib/openmeteo";
 import { coordKey } from "@/lib/places";
@@ -58,20 +58,34 @@ export function DayList({ w, lat, lon, unit }: { w: OneCall; lat: number; lon: n
             </AccordionTrigger>
             <AccordionContent className="px-2">
               {list.length ? (
-                <div role="list" aria-label={`Hora a hora, ${fmtWeekday(d.dt, w.timezone)}`} className="no-scrollbar flex gap-1 overflow-x-auto md:grid md:grid-cols-8 md:overflow-visible">
+                <div role="list" aria-label={`Hora a hora, ${fmtWeekday(d.dt, w.timezone)}`} className="strip flex gap-1 overflow-x-auto select-none">
                   {list.map((h) => {
                     const c = wmo(h.code, h.day);
                     return (
-                      <div role="listitem" key={h.dt} className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-xl py-2 md:w-auto" title={c.text}>
-                        <span className="text-sm text-muted-foreground tabular-nums">{fmtHour(h.dt, w.timezone)}</span>
-                        <ConditionIcon code={c.icon} label={c.text} className="size-7" />
-                        <span className="font-semibold tabular-nums">{deg(h.temp, unit)}</span>
-                        <span className="flex items-center gap-0.5 text-xs text-muted-foreground tabular-nums">
-                          <WindArrow deg={h.windDeg} className="size-3" />
-                          {Math.round(fromMs(h.wind, unit.wind))}
-                        </span>
-                        <span className={h.pop >= 0.3 ? "text-sm text-[oklch(0.86_0.09_235)] tabular-nums" : "text-sm opacity-0"}>{pct(h.pop)}</span>
-                      </div>
+                      <Popover key={h.dt}>
+                        {/* Tap or click an hour for its details (wind and where it comes from) in a real popover. */}
+                        <PopoverTrigger
+                          role="listitem"
+                          className="flex w-16 shrink-0 flex-col items-center gap-1 rounded-xl py-2 outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/60"
+                          aria-label={`${fmtHour(h.dt, w.timezone)}: ${deg(h.temp, unit)}, ${c.text}, lluvia ${pct(h.pop)}. Ver detalle`}
+                        >
+                          <span className="text-sm text-muted-foreground tabular-nums">{fmtHour(h.dt, w.timezone)}</span>
+                          <ConditionIcon code={c.icon} className="size-7" />
+                          <span className="font-semibold tabular-nums">{deg(h.temp, unit)}</span>
+                          <span className={cn("text-sm tabular-nums", h.pop >= 0.3 ? "text-[oklch(0.86_0.09_235)]" : "text-muted-foreground")}>{pct(h.pop)}</span>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 gap-1 border-white/15 bg-[oklch(0.22_0.03_260/0.94)] text-white ring-white/10 backdrop-blur-xl" data-testid="hour-detail">
+                          <p className="font-semibold">
+                            {fmtWeekday(h.dt, w.timezone)} {fmtHour(h.dt, w.timezone)}: {c.text}
+                          </p>
+                          <p className="tabular-nums">
+                            {deg(h.temp, unit)}, lluvia {pct(h.pop)}
+                          </p>
+                          <p className="tabular-nums">
+                            Viento {fmtWind(h.wind, unit.wind)} {windFrom(h.windDeg)}
+                          </p>
+                        </PopoverContent>
+                      </Popover>
                     );
                   })}
                 </div>

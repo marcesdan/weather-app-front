@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { CircleArrowUp, Undo2 } from "lucide-react";
 import type { OneCall } from "@/lib/api";
-import { capitalize, compass, deg, fmtHour, fmtTime, fmtWind, nextDay, pct, type Units } from "@/lib/format";
+import { capitalize, compass, deg, fmtHour, fmtTime, fmtWind, nextDay, pct, rainSoon, windFrom, type RainPoint, type Units } from "@/lib/format";
 import type { Alert } from "@/lib/alerts";
 import { ConditionIcon } from "./condition-icon";
 import { cn } from "@/lib/utils";
@@ -14,18 +14,18 @@ export function WindArrow({ deg, className }: { deg: number; className?: string 
 }
 
 // The reading sits on the sky itself, no card: the sky behind it is the picture of this same state.
-export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: Units; hour: number | null; onNow: () => void }) {
+export function Hero({ w, unit, hour, onNow, soon }: { w: OneCall; unit: Units; hour: number | null; onNow: () => void; soon?: RainPoint[] }) {
   const h = hour == null ? null : w.hourly[hour];
   const s = h ?? w.current;
   const cond = s.weather[0];
   const today = w.daily[0];
   return (
-    <section aria-label={h ? `Pronóstico a las ${fmtHour(h.dt, w.timezone)}` : "Ahora"} className="rise pt-4 pb-2 text-center">
+    <section aria-label={h ? `Pronóstico a las ${fmtHour(h.dt, w.timezone)}` : "Ahora"} className="rise pt-1 text-center">
       <p className="sr-only" aria-live="polite">
         {h ? `Mostrando las ${fmtHour(h.dt, w.timezone)}` : ""}
       </p>
-      <div className="flex h-7 items-center justify-center gap-2">
-        <ConditionIcon code={cond?.icon} animated={!h} className="-my-5 size-16" />
+      {/* The sky behind is the condition; this slot only holds the way back from a picked hour. */}
+      <div className="flex h-7 items-center justify-center">
         {h && (
           <button
             onClick={onNow}
@@ -35,7 +35,7 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: Units; hour: 
           </button>
         )}
       </div>
-      <p className="mt-3 text-[6.5rem] leading-[0.9] font-extralight tracking-[-0.04em] tabular-nums" data-testid="current-temp">
+      <p className="mt-1 text-[3.5rem] leading-none font-extralight tracking-[-0.03em] tabular-nums" data-testid="current-temp">
         {deg(s.temp, unit)}
       </p>
       <p className="mt-2 text-xl font-medium">{capitalize(cond?.description ?? "")}</p>
@@ -43,27 +43,30 @@ export function Hero({ w, unit, hour, onNow }: { w: OneCall; unit: Units; hour: 
         Máx {deg(today.temp.max, unit)} · Mín {deg(today.temp.min, unit)} · Sensación {deg(s.feels_like, unit)}
       </p>
       {/* Every cell is label / value / note on shared rows (subgrid), so all four lines sit on one baseline. */}
-      <dl className="glass mx-auto mt-5 grid max-w-md grid-cols-4 grid-rows-[auto_auto_auto] divide-x divide-border rounded-2xl py-2.5 text-sm">
-        <Fact label="Lluvia" value={pct(h ? h.pop : (w.hourly[0]?.pop ?? 0))} sub={h ? "esa hora" : "próxima hora"} />
+      <dl className="glass mx-auto mt-4 grid max-w-md grid-cols-4 grid-rows-[auto_auto_auto] divide-x divide-border rounded-2xl py-2.5 text-sm">
+        <Fact label="Lluvia" value={pct(h ? h.pop : (w.hourly[0]?.pop ?? 0))} sub={h ? `a las ${fmtHour(h.dt, w.timezone)}` : rainNote(soon, w.timezone)} />
         <Fact label="Humedad" value={`${s.humidity}%`} sub={`rocío ${deg(s.dew_point, unit)}`} />
         <Fact
           label="Viento"
           value={fmtWind(s.wind_speed, unit.wind)}
-          sub={
-            <span className="inline-flex items-center gap-1">
-              <WindArrow deg={s.wind_deg} />
-              del {compass(s.wind_deg)}
-            </span>
-          }
+          sub={windFrom(s.wind_deg)}
         />
         <Fact label="Sol" value={fmtTime(today.sunrise, w.timezone)} sub={`hasta ${fmtTime(today.sunset, w.timezone)}`} />
       </dl>
       {/* Stays in the layout while an hour is picked, so the strip below never jumps. */}
-      <p className={cn("mx-auto mt-4 max-w-sm text-sm text-balance transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
+      <p className={cn("mx-auto mt-3 max-w-sm text-sm text-balance transition-opacity", h && "opacity-0")} aria-hidden={!!h}>
         {nextDay(w.hourly, w.timezone, unit)}
       </p>
     </section>
   );
+}
+
+// The nowcast lands in the rain cell as an exact time: "llueve 23:12", or "para 23:40" while it rains.
+function rainNote(points: RainPoint[] | undefined, tz: string) {
+  const s = points && rainSoon(points);
+  if (!s) return "próxima hora";
+  if (s.raining) return s.at ? `para ${fmtTime(s.at, tz)}` : "lloviendo";
+  return `llueve ${fmtTime(s.at!, tz)}`;
 }
 
 function Fact({ label, value, sub }: { label: string; value: string; sub: React.ReactNode }) {
@@ -83,17 +86,19 @@ export function HourCell({ h, tz, selected, onPick, unit }: { h: OneCall["hourly
     <div role="listitem" className="shrink-0 snap-start">
     <button
       aria-pressed={selected}
-      aria-label={`${fmtHour(h.dt, tz)}: ${deg(h.temp, unit)}, ${cond?.description}, lluvia ${pct(h.pop)}`}
+      aria-label={`${fmtHour(h.dt, tz)}: ${deg(h.temp, unit)}, ${cond?.description}, lluvia ${pct(h.pop)}, viento ${fmtWind(h.wind_speed, unit.wind)} ${windFrom(h.wind_deg)}`}
       onClick={onPick}
       className={cn(
-        "flex w-14 flex-col items-center gap-1.5 rounded-xl py-2.5 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
+        "flex w-16 flex-col items-center gap-1 rounded-xl py-2 text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/60",
         selected ? "bg-primary/90 text-primary-foreground [text-shadow:none]" : "hover:bg-accent",
       )}
     >
       <span className={cn("text-sm tabular-nums", selected ? "" : "text-muted-foreground")}>{fmtHour(h.dt, tz)}</span>
       <ConditionIcon code={cond?.icon} className="size-7" />
       <span className="font-semibold tabular-nums">{deg(h.temp, unit)}</span>
-      <span className={cn("text-xs tabular-nums", h.pop >= 0.3 ? (selected ? "" : "text-[oklch(0.86_0.09_235)]") : "opacity-0")}>{pct(h.pop)}</span>
+      {/* Rain chance in rain blue when it matters, muted otherwise; wind speed without a direction glyph. */}
+      <span className={cn("text-sm tabular-nums", selected ? "" : h.pop >= 0.3 ? "text-[oklch(0.86_0.09_235)]" : "text-muted-foreground")}>{pct(h.pop)}</span>
+      <span className={cn("text-sm whitespace-nowrap tabular-nums", selected ? "" : "text-muted-foreground")}>{fmtWind(h.wind_speed, unit.wind)}</span>
     </button>
     </div>
   );
@@ -132,7 +137,6 @@ export function PlaceCard({
             <ConditionIcon code={cond?.icon} label={cond?.description} className="size-10" />
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
-            <WindArrow deg={w.current.wind_deg} />
             {fmtWind(w.current.wind_speed, unit.wind)} · {pct(w.hourly[0]?.pop ?? 0)} lluvia
           </span>
           {alerts?.[0] && (

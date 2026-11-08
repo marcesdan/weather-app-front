@@ -6,7 +6,6 @@ import { BackLink, HeaderRow, SectionTitle, Shell, Strip } from "@/components/sh
 import { Hero, HourCell, PlaceCard } from "@/components/weather";
 import { skyHour, useSkyHour } from "@/components/sky";
 import { useHere, usePointForecast, useRainSoon, useWeather } from "@/lib/queries";
-import { RainSoon } from "@/components/rain-soon";
 import { DayList } from "@/components/days";
 import { usePlaces, type Place } from "@/lib/places";
 import { fmtDate, type Units } from "@/lib/format";
@@ -65,14 +64,12 @@ export default function Home() {
       </HeaderRow>
 
       {w ? (
-        <Hero w={w} unit={unit} hour={hour} onNow={() => skyHour.set(null)} />
+        <Hero w={w} unit={unit} hour={hour} onNow={() => skyHour.set(null)} soon={soon?.points} />
       ) : weather.isError ? (
         <Retry onRetry={() => weather.refetch()} />
       ) : (
         <div className="mx-auto mt-6 h-56 max-w-sm animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" aria-label="Cargando el clima" />
       )}
-
-      {soon && hour == null && <RainSoon step={soon.step} points={soon.points} />}
 
       <SectionTitle>Próximas horas</SectionTitle>
       {w ? (

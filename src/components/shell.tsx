@@ -78,7 +78,7 @@ export function HeaderRow({ back, lead, children, action }: { back?: string; lea
 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mt-8 mb-3 flex items-center justify-between gap-3">
+    <div className="mt-6 mb-2 flex items-center justify-between gap-3">
       <h2 className="text-base font-medium">{children}</h2>
       {action}
     </div>

@@ -31,7 +31,7 @@ void main() {
   vec3 sky = mix(mix(nightLow, nightTop, uv.y), mix(dayLow, dayTop, uv.y), uDay);
   sky = mix(sky, vec3(0.96, 0.55, 0.30), uGolden * (1.0 - 0.8 * uCloud) * pow(1.0 - uv.y, 2.5) * 0.7); // no muddy dusk under overcast
   float grey = clamp(uCloud * 0.7 + uStorm * 0.3 + uRain * 0.2, 0.0, 1.0);
-  vec3 overcast = mix(vec3(0.10, 0.12, 0.16), vec3(0.30, 0.34, 0.41), uDay) * (1.0 - 0.45 * uStorm);
+  vec3 overcast = mix(vec3(0.06, 0.07, 0.11), vec3(0.30, 0.34, 0.41), uDay) * (1.0 - 0.45 * uStorm);
   sky = mix(sky, overcast, grey * 0.85);
 
   // Stars and moon at night; sun by day. Both fade behind cloud.
@@ -52,7 +52,8 @@ void main() {
   float c1 = smoothstep(cover - 0.05, cover + 0.30, fbm(p * vec2(1.6, 3.2) + drift + vec2(0.0, uTime * 0.002)));
   float c2 = smoothstep(cover + 0.05, cover + 0.40, fbm(p * vec2(3.0, 5.0) + drift * 1.6 + 40.0));
   // A full deck is a heavy, darker grey (that is what overcast looks like, and white text stays legible on it).
-  vec3 lit = mix(vec3(0.30, 0.33, 0.42), vec3(0.72, 0.75, 0.82), uDay) * (1.0 - 0.55 * uStorm) * (1.0 - 0.38 * uCloud * uDay);
+  // Night clouds barely catch light.
+  vec3 lit = mix(vec3(0.15, 0.16, 0.22), vec3(0.72, 0.75, 0.82), uDay) * (1.0 - 0.55 * uStorm) * (1.0 - 0.38 * uCloud * uDay);
   lit = mix(lit, vec3(1.0, 0.75, 0.6), uGolden * 0.35);
   vec3 shade = lit * mix(0.55, 0.75, uDay);
   vec3 cloudCol = mix(shade, lit, smoothstep(0.2, 0.9, uv.y));
@@ -103,7 +104,7 @@ void main() {
   sky = mix(sky, vec3(1.0), clamp(snow, 0.0, 1.0) * uSnow * 0.85);
 
   // Fog: a pale band that thickens toward the ground.
-  sky = mix(sky, mix(vec3(0.22, 0.24, 0.28), vec3(0.44, 0.47, 0.52), uDay), uFog * (0.55 + 0.45 * (1.0 - uv.y)));
+  sky = mix(sky, mix(vec3(0.10, 0.11, 0.14), vec3(0.44, 0.47, 0.52), uDay), uFog * (0.55 + 0.45 * (1.0 - uv.y)));
 
   // Keep white text legible near the top: a gentle deepening of the upper sky.
   sky *= 1.0 - 0.22 * smoothstep(0.45, 1.0, uv.y);
